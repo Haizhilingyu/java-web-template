@@ -1,8 +1,8 @@
 insert into sys_menu(id, name, parent_id, path, icon, sort_order, created_time, modified_time) values
     (1, '系统管理', null, null, 'setting', 1, current_timestamp(), current_timestamp()),
-        (2, '用户管理', 1, '/user/index', 'user', 1, current_timestamp(), current_timestamp()),
-        (3, '角色管理', 1, '/role/index', 'usergroup', 2, current_timestamp(), current_timestamp()),
-        (4, '菜单管理', 1, '/menu/index', 'menu', 3, current_timestamp(), current_timestamp())
+        (2, '用户管理', 1, '/system/user', 'user', 1, current_timestamp(), current_timestamp()),
+        (3, '角色管理', 1, '/system/role', 'usergroup', 2, current_timestamp(), current_timestamp()),
+        (4, '菜单管理', 1, '/system/menu', 'menu', 3, current_timestamp(), current_timestamp())
 ;
 
 insert into sys_role(id, code, name, description, tenant, created_time, modified_time) values

@@ -18,7 +18,8 @@
     "prepare": "node -e \"if(require('fs').existsSync('.git')){process.exit(1)}\" || is-ci || husky install",
     "site:preview": "npm run build && cp -r static _site",
     "test": "echo \"no test specified,work in process\"",
-    "test:coverage": "echo \"no test:coverage specified,work in process\""
+    "test:coverage": "echo \"no test:coverage specified,work in process\"",
+    "gen:api": "node scripts/generate-api.mjs"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
@@ -51,6 +52,7 @@
     "@vitejs/plugin-vue": "^6.0.7",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vue/compiler-sfc": "~3.5.39",
+    "adm-zip": "^0.6.0",
     "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
     "esbuild": "^0.28.1",

@@ -2,11 +2,8 @@ import cloneDeep from 'lodash/cloneDeep';
 import { defineStore } from 'pinia';
 import type { RouteRecordRaw } from 'vue-router';
 
-import type { RouteItem } from '@/api/model/permissionModel';
-import { getMenuList } from '@/api/permission';
 import router, { fixedRouterList, homepageRouterList } from '@/router';
 import { store } from '@/store';
-import { transformObjectToRoute } from '@/utils/route';
 
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
@@ -14,6 +11,7 @@ export const usePermissionStore = defineStore('permission', {
     routers: [] as Array<RouteRecordRaw>,
     removeRoutes: [] as Array<RouteRecordRaw>,
     asyncRoutes: [] as Array<RouteRecordRaw>,
+    routesInited: false,
   }),
   actions: {
     async initRoutes() {
@@ -21,21 +19,15 @@ export const usePermissionStore = defineStore('permission', {
 
       // 在菜单展示全部路由
       this.routers = cloneDeep([...homepageRouterList, ...accessedRouters, ...fixedRouterList]);
-      // 在菜单只展示动态路由和首页
-      // this.routers = [...homepageRouterList, ...accessedRouters];
-      // 在菜单只展示动态路由
-      // this.routers = [...accessedRouters];
     },
     async buildAsyncRoutes() {
-      try {
-        // 发起菜单权限请求 获取菜单列表
-        const asyncRoutes: Array<RouteItem> = (await getMenuList()).list;
-        this.asyncRoutes = transformObjectToRoute(asyncRoutes);
-        await this.initRoutes();
-        return this.asyncRoutes;
-      } catch (error) {
-        throw new Error("Can't build routes", error as ErrorOptions);
-      }
+      // 模板原先通过 mock 接口(/get-menu-list)动态下发路由；
+      // 当前路由全部静态定义(见 router/modules)，接入真实登录后再恢复动态路由。
+      // 注意: 路由守卫以本方法是否已执行过为放行条件(见 src/permission.ts 的 routesInited)，
+      // 不能再依赖 asyncRoutes 是否为空，否则守卫会无限递归
+      await this.initRoutes();
+      this.routesInited = true;
+      return this.asyncRoutes;
     },
     async restoreRoutes() {
       // 不需要在此额外调用initRoutes更新侧边导肮内容，在登录后asyncRoutes为空会调用
@@ -45,6 +37,7 @@ export const usePermissionStore = defineStore('permission', {
         }
       });
       this.asyncRoutes = [];
+      this.routesInited = false;
     },
   },
 });

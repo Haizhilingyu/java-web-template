@@ -1,0 +1,111 @@
+import type {Executor} from '../';
+import type {UserDto} from '../model/dto/';
+import type {Page, UserInput, UserSpecification} from '../model/static/';
+
+export class UserService {
+    
+    constructor(private executor: Executor) {}
+    
+    readonly deleteUser: (options: UserServiceOptions['deleteUser']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/user/';
+        _uri += encodeURIComponent(options.id);
+        return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
+    }
+    
+    readonly findUser: (options: UserServiceOptions['findUser']) => Promise<
+        UserDto['UserService/DEFAULT_FETCHER'] | undefined
+    > = async(options) => {
+        let _uri = '/user/';
+        _uri += encodeURIComponent(options.id);
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<UserDto['UserService/DEFAULT_FETCHER'] | undefined>;
+    }
+    
+    readonly findUserByUsername: (options: UserServiceOptions['findUserByUsername']) => Promise<
+        UserDto['UserService/DEFAULT_FETCHER'] | undefined
+    > = async(options) => {
+        let _uri = '/user/username/';
+        _uri += encodeURIComponent(options.username);
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<UserDto['UserService/DEFAULT_FETCHER'] | undefined>;
+    }
+    
+    readonly findUsersBySuperQBE: (options: UserServiceOptions['findUsersBySuperQBE']) => Promise<
+        Page<UserDto['UserService/DEFAULT_FETCHER']>
+    > = async(options) => {
+        let _uri = '/user/list/bySuperQBE';
+        let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
+        let _value: any = undefined;
+        _value = options.specification.keyword;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'keyword='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        _value = options.specification.enabled;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'enabled='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        _value = options.specification.roleName;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'roleName='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        _value = options.pageIndex;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'pageIndex='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        _value = options.pageSize;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'pageSize='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        _value = options.sortCode;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'sortCode='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<UserDto['UserService/DEFAULT_FETCHER']>>;
+    }
+    
+    readonly saveUser: (options: UserServiceOptions['saveUser']) => Promise<
+        UserDto['UserService/DEFAULT_FETCHER']
+    > = async(options) => {
+        let _uri = '/user';
+        return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<UserDto['UserService/DEFAULT_FETCHER']>;
+    }
+}
+
+export type UserServiceOptions = {
+    'findUsersBySuperQBE': {
+        readonly pageIndex?: number | undefined, 
+        readonly pageSize?: number | undefined, 
+        readonly sortCode?: string | undefined, 
+        readonly specification: UserSpecification
+    }, 
+    'findUser': {
+        readonly id: number
+    }, 
+    'findUserByUsername': {
+        readonly username: string
+    }, 
+    'saveUser': {
+        readonly body: UserInput
+    }, 
+    'deleteUser': {
+        readonly id: number
+    }
+}
