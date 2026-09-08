@@ -26,10 +26,30 @@
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- compile scope: MainApplication 直接引用 jimmer 注解(@EnableImplicitApi) -->
+        <dependency>
+            <groupId>com.jezetek.core</groupId>
+            <artifactId>service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- swagger-ui 静态资源(webjars)，配合 static/swagger-ui.html 展示
+             jimmer 生成的 /openapi.yml -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>swagger-ui</artifactId>
+            <version>5.25.3</version>
+            <scope>runtime</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+            </plugin>
             <!-- 将可执行 jar 与启动脚本打成发行压缩包:
                  app/target/app-<version>-dist.zip，解压即可运行 -->
             <plugin>

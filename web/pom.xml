@@ -80,14 +80,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- web 模块仅包含静态资源、没有主类，跳过从父 pom 继承的 spring-boot repackage -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>

@@ -1,0 +1,40 @@
+/*
+ * 1.  本文件由 jimmer-apt 编译，修改本文件后需要重新构建项目
+ *     (若同时修改了其他 Java 代码，可直接在 IDEA 中点击 Run)
+ *
+ * 2.  实体定义在 core/model 模块，本模块没有 @Entity 类型，
+ *     需要 com.jezetek.core.service.DtoGeneration 上的 @EnableDtoGeneration
+ *     手动启用 DTO 文件编译
+ *
+ * 3.  input 属性块中的校验注解(jakarta.validation.constraints)会生成到
+ *     RoleInput 类上，由 service 保存方法上的 @Valid 触发校验
+ */
+
+export com.jezetek.core.model.Role
+    -> package com.jezetek.core.service.dto
+
+input RoleInput {
+
+    id
+
+    @jakarta.validation.constraints.NotBlank(message = "角色编码不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "角色编码长度不能超过50")
+    @jakarta.validation.constraints.Pattern(regexp = "[A-Z][A-Z0-9_]*", message = "角色编码必须为大写字母开头，可含大写字母、数字和下划线")
+    code
+
+    @jakarta.validation.constraints.NotBlank(message = "角色名称不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "角色名称长度不能超过50")
+    name
+
+    @jakarta.validation.constraints.Size(max = 200, message = "角色描述长度不能超过200")
+    description
+
+    id(menus) as menuIds
+}
+
+specification RoleSpecification {
+    like/i(code, name) as keyword
+    flat(menus) {
+        like/i(name) as menuName
+    }
+}

@@ -1,3 +1,89 @@
 spring:
   application:
     name: app
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    # 内存库，重启即重建；DB_CLOSE_DELAY=-1 保证连接归还后库不丢
+    url: jdbc:h2:mem:java-web-template;DB_CLOSE_DELAY=-1;database_to_upper=true
+
+  # 启动时执行建表与种子数据脚本
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/h2-schema.sql
+      data-locations: classpath:sql/h2-data.sql
+
+  # 关闭 Boot 默认静态资源映射，/** 由 app 的 WebMvcConfig 独占
+  # (jimmer 的 scalarUiConfig 也会抢注 /**，见下方 jimmer.client.openapi 处说明)
+  web:
+    resources:
+      add-mappings: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# You can open `http://localhost:8080/openapi.html` to view the jimmer-swagger
+#
+# You can also download the typescript files generated for the client via
+#  http://localhost:8080/ts.zip.
+#
+# Unlike other solutions that automatically connects the front-end
+# team and the back-end team, jimmer allows the front-end team and
+# the back-end team to see different perspectives.
+#
+# The backend team uses jimmer's unified dynamic entity model instead
+# of defining DTO types for each business scenario.
+# For service providers, eliminating the DTO explosion problem will
+# bring great convenience.
+#
+# However, for service consumers, each business scenario has a
+# corresponding DTO definition to make the usage very clear. It needs DTO
+# definition explosion, because it only considers consumption, not providing.
+#
+# The annotation `@org.babyfish.jimmer.client.FetchBy` is used to make the
+# generated TypeScript code contain the DTO model hidden by jimmer backend
+
+jimmer:
+  offset-optimizing-threshold: 10
+  id-only-target-checking-level: ALL
+  database-validation-mode: ERROR
+  show-sql: true
+  pretty-sql: true
+
+  # You can enable the following configuration line `inline-sql-variables: true`,
+  # restart the application and call some REST APIs again to see what happens
+  # inline-sql-variables: true
+
+  executor-context-prefixes:
+    - com.jezetek
+  client:
+    ts:
+      path: /ts.zip
+    openapi:
+      # 保留原始 OpenAPI 文档，可视化页面见 /swagger-ui.html(static 目录自带，
+      # 资源来自 webjars:swagger-ui，离线可用)。
+      # 不要配置 ui-path——jimmer 的 scalarUiConfig 一旦激活会注册
+      # /** -> classpath:META-INF/resources/webjars/scalar 的资源映射，
+      # 覆盖本项目 SPA 的 /** 静态资源处理导致前端页面 404；
+      # 且 0.12.0 的 jimmer-client-swagger 不含 scalar 资源本体，页面也无法渲染
+      path: /openapi.yml
+      properties:
+        info:
+          title: java-web-template API
+          description: java-web-template 后端接口(用户/角色/菜单)
+          version: 0.0.1-SNAPSHOT
+        securities:
+          - tenantHeader: []
+        components:
+          securitySchemes:
+            tenantHeader:
+              type: apiKey
+              name: tenant
+              in: HEADER
+
+core:
+  # 请求头未携带 tenant 时的兜底租户
+  default-tenant: default
