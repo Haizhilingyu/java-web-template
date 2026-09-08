@@ -53,6 +53,9 @@ export default ({ mode }: ConfigEnv): UserConfig => {
 
     // https://github.com/vueuse/vueuse/issues/5387#issuecomment-4734186040
     build: {
+      // 编译产物输出到 static 目录，与 Spring Boot 静态资源目录(classpath:/static)保持一致，
+      // 便于 Maven 构建时直接打入 web 模块 jar
+      outDir: 'static',
       rolldownOptions: {
         onLog(level, log, defaultHandler) {
           if (log.code === 'INVALID_ANNOTATION') return null;

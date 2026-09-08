@@ -16,7 +16,7 @@
     "stylelint": "stylelint src/**/*.{html,vue,css,sass,less}",
     "stylelint:fix": "stylelint --fix src/**/*.{html,vue,css,sass,less}",
     "prepare": "node -e \"if(require('fs').existsSync('.git')){process.exit(1)}\" || is-ci || husky install",
-    "site:preview": "npm run build && cp -r dist _site",
+    "site:preview": "npm run build && cp -r static _site",
     "test": "echo \"no test specified,work in process\"",
     "test:coverage": "echo \"no test:coverage specified,work in process\""
   },

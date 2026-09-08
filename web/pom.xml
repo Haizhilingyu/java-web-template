@@ -15,8 +15,20 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 需满足 package.json engines(>=22.12.0) 及依赖的 engine 要求(^22.13.0 || >=24) -->
+        <node.version>v24.13.0</node.version>
+        <!-- node 发行包下载地址，可用 -Dnode.download.root=... 覆盖 -->
+        <node.download.root>https://npmmirror.com/mirrors/node/</node.download.root>
     </properties>
     <build>
+        <resources>
+            <!-- 前端编译产物(web/static，见 vite.config.ts 的 build.outDir)作为资源
+                 打入 jar 的 static/ 目录，供 app 模块作为 Spring Boot 静态资源托管 -->
+            <resource>
+                <directory>${project.basedir}/static</directory>
+                <targetPath>static</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -24,7 +36,19 @@
                 <!-- Use the latest released version:
                 https://repo1.maven.org/maven2/com/github/eirslett/frontend-maven-plugin/ -->
                 <version>2.0.2</version>
+                <configuration>
+                    <nodeVersion>${node.version}</nodeVersion>
+                    <nodeDownloadRoot>${node.download.root}</nodeDownloadRoot>
+                </configuration>
                 <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <!-- optional: default phase is "generate-resources" -->
+                        <phase>initialize</phase>
+                    </execution>
                     <execution>
                         <id>npm install</id>
                         <goals>
@@ -42,9 +66,28 @@
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <!-- 与 npm install 同阶段，按声明顺序在其后执行；
+                             产物输出到 web/static (vite build.outDir) -->
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
                 </executions>
+            </plugin>
+            <!-- web 模块仅包含静态资源、没有主类，跳过从父 pom 继承的 spring-boot repackage -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
