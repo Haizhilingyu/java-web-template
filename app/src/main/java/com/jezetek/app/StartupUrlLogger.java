@@ -26,8 +26,7 @@ public class StartupUrlLogger implements ApplicationListener<WebServerInitialize
                 API 文档:    {}/swagger-ui.html
                 OpenAPI:     {}/openapi.yml
                 TS 客户端:   {}/ts.zip
-                H2 控制台:   {}/h2-console
                 ----------------------------------------------------------""",
-                base, base, base, base, base);
+                base, base, base, base);
     }
 }

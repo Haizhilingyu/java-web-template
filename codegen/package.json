@@ -1,0 +1,20 @@
+{
+  "name": "@jezetek/jimmer-codegen",
+  "version": "0.1.0",
+  "private": true,
+  "description": "根据实体模型 Schema 生成 jimmer 多模块工程(model/repository/runtime/service + SQL + Maven pom)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "gen": "tsx src/cli.ts",
+    "gen:rbac": "tsx src/cli.ts -s schemas/rbac.ts -o out"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "~6.0.3"
+  }
+}
