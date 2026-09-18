@@ -82,3 +82,17 @@ curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: applicati
 - TDesign 树形表格必须用 `t-enhanced-table`（`t-table` 会静默忽略 `tree` 配置且类型定义上完全相同）；授权树用 `t-tree`（联动勾选），保存时把勾选节点的**祖先 id 一并补全**再提交，否则父目录未绑定导致动态路由丢子树
 - 动态菜单 title 是纯字符串，`MenuContent`/`Breadcrumb` 已做兼容；新增消费 `meta.title` 的组件要注意
 - IDEA 开着时其 Maven 自动导入可能清空/重建构建目录，别与其并发构建冲突
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature>/` in this repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
