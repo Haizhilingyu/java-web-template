@@ -48,10 +48,11 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       allowedHosts: true,
       proxy: {
         // 后端 API 代理：/api 前缀转发到 Spring Boot(8080)并去掉前缀
+        // 后端接口统一 /api/v1/** 前缀，代理透传不重写；
+        // /api 前缀只属于后端接口，不会与前端 history 路由冲突
         [VITE_API_URL_PREFIX]: {
           target: 'http://127.0.0.1:8080/',
           changeOrigin: true,
-          rewrite: (path: string) => path.replace(new RegExp(`^${VITE_API_URL_PREFIX}`), ''),
         },
       },
     },

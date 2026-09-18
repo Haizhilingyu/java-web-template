@@ -3,7 +3,7 @@
     <t-card class="list-card-container" :bordered="false">
       <t-row justify="space-between">
         <div class="left-operation-container">
-          <t-button @click="openForm()"> 新增用户 </t-button>
+          <t-button v-permission="'system:user:add'" @click="openForm()"> 新增用户 </t-button>
         </div>
         <t-space break-line>
           <t-input v-model="query.keyword" placeholder="用户名/昵称" clearable class="search-item" />
@@ -37,8 +37,8 @@
         </template>
         <template #op="{ row }">
           <t-space>
-            <t-link theme="primary" @click="openForm(row)"> 编辑 </t-link>
-            <t-link theme="danger" @click="confirmDelete(row)"> 删除 </t-link>
+            <t-link theme="primary" v-permission="'system:user:edit'" @click="openForm(row)"> 编辑 </t-link>
+            <t-link theme="danger" v-permission="'system:user:delete'" @click="confirmDelete(row)"> 删除 </t-link>
           </t-space>
         </template>
       </t-table>

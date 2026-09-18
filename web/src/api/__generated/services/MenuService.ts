@@ -9,7 +9,7 @@ export class MenuService {
     readonly deleteMenu: (options: MenuServiceOptions['deleteMenu']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/menu/';
+        let _uri = '/api/v1/menu/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
     }
@@ -17,25 +17,26 @@ export class MenuService {
     readonly findMenu: (options: MenuServiceOptions['findMenu']) => Promise<
         MenuDto['MenuService/DEFAULT_FETCHER'] | undefined
     > = async(options) => {
-        let _uri = '/menu/';
+        let _uri = '/api/v1/menu/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<MenuDto['MenuService/DEFAULT_FETCHER'] | undefined>;
     }
     
     /**
-     * 菜单树：只查根节点，子菜单由递归 fetcher 抓取
+     * 菜单树：只查根节点，子菜单由递归 fetcher 抓取。
+     * 菜单是全局数据(无租户)，任何登录用户可见(用于角色授权树/导航展示)
      */
     readonly findMenus: () => Promise<
         ReadonlyArray<MenuDto['MenuService/TREE_FETCHER']>
     > = async() => {
-        let _uri = '/menu/list';
+        let _uri = '/api/v1/menu/list';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<ReadonlyArray<MenuDto['MenuService/TREE_FETCHER']>>;
     }
     
     readonly findMenusBySuperQBE: (options: MenuServiceOptions['findMenusBySuperQBE']) => Promise<
         Page<MenuDto['MenuService/DEFAULT_FETCHER']>
     > = async(options) => {
-        let _uri = '/menu/list/bySuperQBE';
+        let _uri = '/api/v1/menu/list/bySuperQBE';
         let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
         let _value: any = undefined;
         _value = options.specification.keyword;
@@ -79,7 +80,7 @@ export class MenuService {
     readonly saveMenu: (options: MenuServiceOptions['saveMenu']) => Promise<
         MenuDto['MenuService/DEFAULT_FETCHER']
     > = async(options) => {
-        let _uri = '/menu';
+        let _uri = '/api/v1/menu';
         return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<MenuDto['MenuService/DEFAULT_FETCHER']>;
     }
 }

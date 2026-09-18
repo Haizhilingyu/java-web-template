@@ -43,10 +43,15 @@ router.beforeEach(async (to, from, next) => {
           return;
         }
       }
-      if (router.hasRoute(to.name!)) {
+      if (to.name === PAGE_NOT_FOUND_ROUTE.name) {
+        // 404 兜底路由直接放行渲染
+        next();
+      } else if (router.hasRoute(to.name!) && to.matched.length > 1) {
+        // 业务页面都挂在 LAYOUT 目录下(matched 至少两层)；
+        // 只匹配到目录层(如无权访问的 /system/role)会渲染空白，重定向到首个可达页面
         next();
       } else {
-        next(`/`);
+        next(permissionStore.firstRoutePath);
       }
     } catch (error) {
       MessagePlugin.error((error as Error).message);

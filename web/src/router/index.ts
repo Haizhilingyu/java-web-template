@@ -19,8 +19,16 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/login/index.vue'),
   },
   {
+    // 登录后由 permission store 按动态菜单重设重定向目标(同名路由整体替换)
     path: '/',
+    name: 'root',
     redirect: '/system/user',
+  },
+  {
+    // 404 兜底直接渲染页面而非 redirect：/result/404 未注册路由，redirect 会无限重定向
+    path: '/:pathMatch(.*)*',
+    name: '404Page',
+    component: () => import('@/pages/result/404/index.vue'),
   },
 ];
 // 存放固定路由

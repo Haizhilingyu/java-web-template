@@ -8,9 +8,10 @@ export interface UserInput {
      */
     readonly username: string;
     /**
-     * 登录密码(加密后的密文)。
+     * BCrypt 密文。
      * 
-     * <p>可为空：预留给验证码/SSO 等免密登录的账号</p>
+     * <p>可为空：预留给验证码/SSO 等免密登录的账号；
+     * 更新用户时该属性缺省表示不修改密码</p>
      */
     readonly password?: string | undefined;
     /**

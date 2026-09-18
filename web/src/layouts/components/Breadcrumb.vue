@@ -15,8 +15,10 @@ import { useLocale } from '@/locales/useLocale';
 const { locale } = useLocale();
 const route = useRoute();
 
-const renderTitle = (title?: LocalizedTitle, fallback?: string) => {
+const renderTitle = (title?: LocalizedTitle | string, fallback?: string) => {
   if (!title) return fallback || '';
+  // 后端动态菜单下发的 title 是纯字符串，静态路由才是多语言对象
+  if (typeof title === 'string') return title;
   return title[locale.value as keyof LocalizedTitle] || fallback || '';
 };
 

@@ -56,8 +56,10 @@ const menuIcon = (item: ListItemType) => {
   return RenderIcon;
 };
 
-const renderMenuTitle = (title?: LocalizedTitle) => {
+const renderMenuTitle = (title?: LocalizedTitle | string) => {
   if (!title) return '';
+  // 后端动态菜单下发的 title 是纯字符串，静态路由才是多语言对象
+  if (typeof title === 'string') return title;
   return title[locale.value as keyof LocalizedTitle] || '';
 };
 

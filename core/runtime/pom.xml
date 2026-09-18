@@ -30,5 +30,25 @@
             <artifactId>jimmer-spring-boot-starter</artifactId>
             <version>${jimmer.version}</version>
         </dependency>
+        <!-- 认证授权基础设施(SecurityFilterChain/JWT 过滤器/方法级权限)，
+             业务模块只依赖本模块即可获得安全契约 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 </project>

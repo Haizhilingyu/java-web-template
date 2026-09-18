@@ -3,7 +3,7 @@
     <t-card class="list-card-container" :bordered="false">
       <t-row justify="space-between">
         <div class="left-operation-container">
-          <t-button @click="openForm()"> 新增角色 </t-button>
+          <t-button v-permission="'system:role:add'" @click="openForm()"> 新增角色 </t-button>
         </div>
         <t-space break-line>
           <t-input v-model="query.keyword" placeholder="编码/名称" clearable class="search-item" />
@@ -28,8 +28,8 @@
         </template>
         <template #op="{ row }">
           <t-space>
-            <t-link theme="primary" @click="openForm(row)"> 编辑 </t-link>
-            <t-link theme="danger" @click="confirmDelete(row)"> 删除 </t-link>
+            <t-link theme="primary" v-permission="'system:role:edit'" @click="openForm(row)"> 编辑 </t-link>
+            <t-link theme="danger" v-permission="'system:role:delete'" @click="confirmDelete(row)"> 删除 </t-link>
           </t-space>
         </template>
       </t-table>
@@ -39,7 +39,7 @@
       v-model:visible="formVisible"
       :header="form.id ? '编辑角色' : '新增角色'"
       :confirm-btn="{ content: '保存', loading: saving }"
-      width="520px"
+      width="560px"
       @confirm="save"
       @closed="formInstance?.reset()"
     >
@@ -53,15 +53,18 @@
         <t-form-item label="描述" name="description">
           <t-textarea v-model="form.description" />
         </t-form-item>
-        <t-form-item label="菜单" name="menuIds">
-          <t-select
-            v-model="form.menuIds"
-            multiple
-            clearable
-            :options="menuOptions"
-            placeholder="选择可访问的菜单"
-            :max-collapsed-span="1"
-          />
+        <t-form-item label="菜单授权" name="menuIds">
+          <div class="menu-tree-box">
+            <!-- TDesign Tree 的受控勾选是 v-model(modelValue)，写成 v-model:checked 不会同步值 -->
+            <t-tree
+              v-model="form.menuIds"
+              :data="menuTreeOptions"
+              checkable
+              hover
+              value-mode="all"
+              :expand-level="2"
+            />
+          </div>
         </t-form-item>
       </t-form>
     </t-dialog>
@@ -111,7 +114,15 @@
   const data = ref<RoleRow[]>([]);
   const loading = ref(false);
 
-  const menuOptions = ref<Array<{ label: string; value: number }>>([]);
+  const menuTreeOptions = ref<MenuOption[]>([]);
+  // 授权树原始数据：保存时用于补全勾选节点的父级，防止子菜单脱离目录形成断链
+  const menuTreeData = ref<MenuNode[]>([]);
+
+  interface MenuOption {
+    label: string;
+    value: number;
+    children?: MenuOption[];
+  }
 
   const formVisible = ref(false);
   const saving = ref(false);
@@ -159,17 +170,39 @@
 
   async function loadMenus() {
     const menus = await api.menuService.findMenus();
-    const options: Array<{ label: string; value: number }> = [];
-    const walk = (nodes: ReadonlyArray<MenuNode>) => {
+    menuTreeData.value = [...menus];
+    menuTreeOptions.value = toTreeOptions(menus);
+  }
+
+  function toTreeOptions(nodes: ReadonlyArray<MenuNode>): MenuOption[] {
+    return nodes.map((node) => {
+      const option: MenuOption = {
+        // 按钮节点标注类型，便于区分页面与按钮级权限
+        label: node.type === 'F' ? `${node.name}（按钮）` : node.name,
+        value: node.id,
+      };
+      if (node.children?.length) {
+        option.children = toTreeOptions(node.children);
+      }
+      return option;
+    });
+  }
+
+  /** 勾选集合补全其全部祖先节点 */
+  function withAncestors(ids: number[]): number[] {
+    const set = new Set(ids);
+    const walk = (nodes: ReadonlyArray<MenuNode>, ancestors: number[]) => {
       nodes.forEach((node) => {
-        options.push({ label: node.name, value: node.id });
+        if (set.has(node.id)) {
+          ancestors.forEach((id) => set.add(id));
+        }
         if (node.children?.length) {
-          walk(node.children);
+          walk(node.children, [...ancestors, node.id]);
         }
       });
     };
-    walk(menus);
-    menuOptions.value = options;
+    walk(menuTreeData.value, []);
+    return [...set];
   }
 
   function search() {
@@ -211,7 +244,7 @@
         code: form.code,
         name: form.name,
         description: form.description ? form.description : undefined,
-        menuIds: form.menuIds,
+        menuIds: withAncestors(form.menuIds),
       };
       await api.roleService.saveRole({ body: input });
       MessagePlugin.success('保存成功');
@@ -257,5 +290,14 @@
 
   .search-item {
     width: 160px;
+  }
+
+  .menu-tree-box {
+    width: 100%;
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--td-component-border);
+    border-radius: var(--td-radius-medium);
+    padding: 8px;
   }
 </style>

@@ -21,6 +21,8 @@ export type ModeType = 'dark' | 'light';
 export interface UserInfo {
   name: string;
   roles: string[];
+  /** 按钮级权限标识集合，如 ['system:user:add']；超级管理员为 ['*:*:*'] */
+  perms: string[];
 }
 
 export interface NotificationItem {

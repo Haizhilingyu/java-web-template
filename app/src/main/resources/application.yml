@@ -7,12 +7,14 @@ spring:
     # 内存库，重启即重建；DB_CLOSE_DELAY=-1 保证连接归还后库不丢
     url: jdbc:h2:mem:java-web-template;DB_CLOSE_DELAY=-1;database_to_upper=true
 
-  # 启动时执行建表与种子数据脚本
+  # 启动时执行建表与种子数据脚本：
+  # 每个业务模块自带 sql/{模块}-schema.sql / -data.sql，随 jar 在 classpath 上，
+  # 这里通配加载。约束：模块之间不允许外键引用(规避跨 jar 的脚本顺序问题)
   sql:
     init:
       mode: always
-      schema-locations: classpath:sql/h2-schema.sql
-      data-locations: classpath:sql/h2-data.sql
+      schema-locations: classpath*:sql/*-schema.sql
+      data-locations: classpath*:sql/*-data.sql
 
   # 关闭 Boot 默认静态资源映射，/** 由 app 的 WebMvcConfig 独占
   # (jimmer 的 scalarUiConfig 也会抢注 /**，见下方 jimmer.client.openapi 处说明)
@@ -87,3 +89,11 @@ jimmer:
 core:
   # 请求头未携带 tenant 时的兜底租户
   default-tenant: default
+  # 业务模块开关(如菜单同步)；模块本体由 app/pom.xml 依赖决定
+  module:
+    menu-sync: true
+  # 认证授权：HMAC 密钥(至少 32 字节)与令牌有效期(小时)。
+  # 默认密钥仅供演示，生产必须覆盖
+  security:
+    secret-key: java-web-template-demo-secret-key-change-me-32B
+    expire-hours: 24

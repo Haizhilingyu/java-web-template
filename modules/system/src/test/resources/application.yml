@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:system-module-test;DB_CLOSE_DELAY=-1;database_to_upper=true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/system-schema.sql
+      data-locations: classpath:sql/system-data.sql
+
+jimmer:
+  database-validation-mode: ERROR
+  show-sql: false
+
+core:
+  default-tenant: default
+  module:
+    # 测试用种子数据构造菜单，不执行启动同步(需要时在用例里显式调用 sync())
+    menu-sync: false
+  security:
+    secret-key: system-module-test-secret-key-0123456789abcdef
+    expire-hours: 1

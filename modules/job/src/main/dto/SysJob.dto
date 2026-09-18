@@ -1,0 +1,39 @@
+/*
+ * 1.  本文件由 jimmer-apt 编译，修改本文件后需要重新构建项目
+ * 2.  实体定义在本模块 model 包，需要
+ *     com.jezetek.modules.job.service.DtoGeneration 上的
+ *     @EnableDtoGeneration 手动启用 DTO 文件编译
+ */
+
+export com.jezetek.modules.job.model.SysJob
+    -> package com.jezetek.modules.job.service.dto
+
+input SysJobInput {
+
+    id
+
+    @jakarta.validation.constraints.NotBlank(message = "任务名不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "任务名长度不能超过50")
+    name
+
+    @jakarta.validation.constraints.NotBlank(message = "cron 表达式不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "cron 表达式长度不能超过50")
+    cron
+
+    @jakarta.validation.constraints.NotBlank(message = "处理器不能为空")
+    @jakarta.validation.constraints.Size(max = 100, message = "处理器名长度不能超过100")
+    handler
+
+    @jakarta.validation.constraints.Size(max = 200, message = "参数长度不能超过200")
+    param
+
+    status
+
+    @jakarta.validation.constraints.Size(max = 200, message = "备注长度不能超过200")
+    memo
+}
+
+specification SysJobSpecification {
+    like/i(name, handler) as keyword
+    eq(status)
+}

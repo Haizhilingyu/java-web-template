@@ -28,9 +28,10 @@ export type UserDto = {
          */
         readonly username: string;
         /**
-         * 登录密码(加密后的密文)。
+         * BCrypt 密文。
          * 
-         * <p>可为空：预留给验证码/SSO 等免密登录的账号</p>
+         * <p>可为空：预留给验证码/SSO 等免密登录的账号；
+         * 更新用户时该属性缺省表示不修改密码</p>
          */
         readonly password?: string | undefined;
         /**
@@ -66,7 +67,8 @@ export type UserDto = {
              */
             readonly modifiedTime: string;
             /**
-             * 角色编码(如 ADMIN)，租户内唯一
+             * 角色编码(如 ADMIN)，租户内唯一。
+             * 编码 ADMIN 为内置超级管理员：菜单与接口权限全部直通
              */
             readonly code: string;
             /**

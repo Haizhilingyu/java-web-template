@@ -1,3 +1,9 @@
+export type {AuthModels_GetInfoResponse} from './AuthModels_GetInfoResponse';
+export type {AuthModels_LoginRequest} from './AuthModels_LoginRequest';
+export type {AuthModels_LoginResult} from './AuthModels_LoginResult';
+export type {AuthModels_RouteMeta} from './AuthModels_RouteMeta';
+export type {AuthModels_RouteVO} from './AuthModels_RouteVO';
+export type {AuthModels_UserInfo} from './AuthModels_UserInfo';
 export type {MenuInput} from './MenuInput';
 export type {MenuSpecification} from './MenuSpecification';
 export type {Page} from './Page';
@@ -5,5 +11,7 @@ export type {Pageable} from './Pageable';
 export type {RoleInput} from './RoleInput';
 export type {RoleSpecification} from './RoleSpecification';
 export type {Sort} from './Sort';
+export type {SysJobInput} from './SysJobInput';
+export type {SysJobSpecification} from './SysJobSpecification';
 export type {UserInput} from './UserInput';
 export type {UserSpecification} from './UserSpecification';

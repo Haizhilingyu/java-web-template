@@ -26,11 +26,66 @@
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- ====== 框架底座(必选) ====== -->
         <!-- compile scope: MainApplication 直接引用 jimmer 注解(@EnableImplicitApi) -->
         <dependency>
             <groupId>com.jezetek.core</groupId>
-            <artifactId>service</artifactId>
+            <artifactId>runtime</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <!-- ====== 业务模块(选装)：注释掉依赖即整体移除该模块(表/接口/菜单) ====== -->
+        <!-- 系统管理：用户/角色/菜单 + 登录认证 + 模块菜单同步。
+             认证依赖用户体系，本模块实际上必选 -->
+        <dependency>
+            <groupId>com.jezetek.modules</groupId>
+            <artifactId>system</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 定时任务(可选模块示例)：注释后重启，其表/接口/菜单全部消失 -->
+        <dependency>
+            <groupId>com.jezetek.modules</groupId>
+            <artifactId>job</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- ====== 驱动与文档设施(随部署环境取舍) ====== -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.220</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.12</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.4.2.RELEASE</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.9.1</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- jimmer 自动生成 /openapi.yml 与 /ts.zip -->
+        <dependency>
+            <groupId>org.babyfish.jimmer</groupId>
+            <artifactId>jimmer-client-swagger</artifactId>
+            <version>${jimmer.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <!-- swagger-ui 静态资源(webjars)，配合 static/swagger-ui.html 展示
              jimmer 生成的 /openapi.yml -->
@@ -45,6 +100,7 @@
 
     <build>
         <plugins>
+            <!-- spring-boot-maven-plugin 只在本模块声明(红线见根 pom 注释) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

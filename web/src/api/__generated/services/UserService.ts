@@ -9,7 +9,7 @@ export class UserService {
     readonly deleteUser: (options: UserServiceOptions['deleteUser']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/user/';
+        let _uri = '/api/v1/user/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
     }
@@ -17,7 +17,7 @@ export class UserService {
     readonly findUser: (options: UserServiceOptions['findUser']) => Promise<
         UserDto['UserService/DEFAULT_FETCHER'] | undefined
     > = async(options) => {
-        let _uri = '/user/';
+        let _uri = '/api/v1/user/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<UserDto['UserService/DEFAULT_FETCHER'] | undefined>;
     }
@@ -25,7 +25,7 @@ export class UserService {
     readonly findUserByUsername: (options: UserServiceOptions['findUserByUsername']) => Promise<
         UserDto['UserService/DEFAULT_FETCHER'] | undefined
     > = async(options) => {
-        let _uri = '/user/username/';
+        let _uri = '/api/v1/user/username/';
         _uri += encodeURIComponent(options.username);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<UserDto['UserService/DEFAULT_FETCHER'] | undefined>;
     }
@@ -33,7 +33,7 @@ export class UserService {
     readonly findUsersBySuperQBE: (options: UserServiceOptions['findUsersBySuperQBE']) => Promise<
         Page<UserDto['UserService/DEFAULT_FETCHER']>
     > = async(options) => {
-        let _uri = '/user/list/bySuperQBE';
+        let _uri = '/api/v1/user/list/bySuperQBE';
         let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
         let _value: any = undefined;
         _value = options.specification.keyword;
@@ -81,10 +81,16 @@ export class UserService {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<UserDto['UserService/DEFAULT_FETCHER']>>;
     }
     
+    /**
+     * password 属性未提交(更新场景)时保持原值；
+     * 提交了明文则落库前 BCrypt 加密。
+     * 不能用 input.toEntity()：dto 生成的映射对未提交属性无条件 set null，
+     * 会把库里原值覆盖为 NULL，因此这里手工组装 draft 控制属性的加载态
+     */
     readonly saveUser: (options: UserServiceOptions['saveUser']) => Promise<
         UserDto['UserService/DEFAULT_FETCHER']
     > = async(options) => {
-        let _uri = '/user';
+        let _uri = '/api/v1/user';
         return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<UserDto['UserService/DEFAULT_FETCHER']>;
     }
 }

@@ -3,6 +3,7 @@ import { createApp } from 'vue';
 import TDesign from 'tdesign-vue-next';
 
 import App from './App.vue';
+import { permission } from './directives/permission';
 import router from './router';
 import { store } from './store';
 import i18n from './locales';
@@ -17,5 +18,6 @@ app.use(TDesign);
 app.use(store);
 app.use(router);
 app.use(i18n);
+app.directive('permission', permission);
 
 app.mount('#app');

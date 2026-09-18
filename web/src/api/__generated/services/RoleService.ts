@@ -9,7 +9,7 @@ export class RoleService {
     readonly deleteRole: (options: RoleServiceOptions['deleteRole']) => Promise<
         void
     > = async(options) => {
-        let _uri = '/role/';
+        let _uri = '/api/v1/role/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'DELETE'})) as Promise<void>;
     }
@@ -17,7 +17,7 @@ export class RoleService {
     readonly findRole: (options: RoleServiceOptions['findRole']) => Promise<
         RoleDto['RoleService/DEFAULT_FETCHER'] | undefined
     > = async(options) => {
-        let _uri = '/role/';
+        let _uri = '/api/v1/role/';
         _uri += encodeURIComponent(options.id);
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<RoleDto['RoleService/DEFAULT_FETCHER'] | undefined>;
     }
@@ -25,7 +25,7 @@ export class RoleService {
     readonly findRolesBySuperQBE: (options: RoleServiceOptions['findRolesBySuperQBE']) => Promise<
         Page<RoleDto['RoleService/DEFAULT_FETCHER']>
     > = async(options) => {
-        let _uri = '/role/list/bySuperQBE';
+        let _uri = '/api/v1/role/list/bySuperQBE';
         let _separator = _uri.indexOf('?') === -1 ? '?' : '&';
         let _value: any = undefined;
         _value = options.specification.keyword;
@@ -69,7 +69,7 @@ export class RoleService {
     readonly saveRole: (options: RoleServiceOptions['saveRole']) => Promise<
         RoleDto['RoleService/DEFAULT_FETCHER']
     > = async(options) => {
-        let _uri = '/role';
+        let _uri = '/api/v1/role';
         return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<RoleDto['RoleService/DEFAULT_FETCHER']>;
     }
 }
