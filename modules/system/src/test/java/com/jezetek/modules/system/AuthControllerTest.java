@@ -63,6 +63,28 @@ class AuthControllerTest {
     }
 
     @Test
+    void 登出后令牌立即失效且同用户并存会话不受影响() throws Exception {
+        // 同用户两次登录 = 两个并存会话(模拟双浏览器)
+        String token1 = login("admin", "123456");
+        String token2 = login("admin", "123456");
+
+        mockMvc.perform(get("/api/v1/auth/getInfo").header("Authorization", "Bearer " + token1))
+                .andExpect(status().isOk());
+
+        // 登出会话1
+        mockMvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + token1))
+                .andExpect(status().isOk());
+
+        // 会话1立即 401
+        mockMvc.perform(get("/api/v1/auth/getInfo").header("Authorization", "Bearer " + token1))
+                .andExpect(status().isUnauthorized());
+        // 会话2不受影响
+        mockMvc.perform(get("/api/v1/auth/getInfo").header("Authorization", "Bearer " + token2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.username").value("admin"));
+    }
+
+    @Test
     void 密码错误返回401与提示() throws Exception {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -2,11 +2,12 @@ package com.jezetek.modules.system.security;
 
 import com.jezetek.core.runtime.security.LoginUser;
 import com.jezetek.core.runtime.security.SecurityUtils;
+import com.jezetek.core.runtime.security.SessionRegistry;
 import com.jezetek.core.runtime.security.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,27 +25,40 @@ public class AuthController {
 
     private final TokenService tokenService;
 
+    private final SessionRegistry sessionRegistry;
+
     private final MenuRouteService menuRouteService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
+            SessionRegistry sessionRegistry,
             MenuRouteService menuRouteService
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
+        this.sessionRegistry = sessionRegistry;
         this.menuRouteService = menuRouteService;
     }
 
-    /** 认证成功签发 JWT */
+    /** 认证成功签发 JWT 并登记会话(ADR-0001) */
     @PostMapping("/login")
-    public AuthModels.LoginResult login(@Valid @RequestBody AuthModels.LoginRequest request) {
+    public AuthModels.LoginResult login(
+            @Valid @RequestBody AuthModels.LoginRequest request,
+            HttpServletRequest httpRequest
+    ) {
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
-        UserDetails details = (UserDetails) authentication.getPrincipal();
-        long userId = ((LoginUserDetails) details).userId();
-        return new AuthModels.LoginResult(tokenService.create(userId), null);
+        LoginUserDetails details = (LoginUserDetails) authentication.getPrincipal();
+        LoginUser loginUser = details.loginUser();
+        String token = tokenService.create(
+                details.userId(),
+                loginUser.username(),
+                loginUser.nickname(),
+                clientIp(httpRequest)
+        );
+        return new AuthModels.LoginResult(token, null);
     }
 
     /** 当前登录用户的基本信息 + 角色 + 权限标识集合(按钮级权限指令的数据源) */
@@ -66,11 +80,34 @@ public class AuthController {
     }
 
     /**
-     * 无状态令牌没有服务端会话可销毁，
-     * 前端删除本地 token 即完成登出；此处留作令牌黑名单等扩展点
+     * 撤销当前会话(注册表删除 jti)，令牌即时失效；
+     * 同用户其他并存会话不受影响(ADR-0001)
      */
     @PostMapping("/logout")
-    public void logout() {
+    public void logout(HttpServletRequest request) {
+        String token = bearerToken(request);
+        TokenService.TokenPayload payload = tokenService.parse(token);
+        if (payload != null) {
+            sessionRegistry.remove(payload.jti());
+        }
+    }
+
+    private static String bearerToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring("Bearer ".length());
+        }
+        return null;
+    }
+
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            // 多级代理取首个(客户端真实 IP)
+            int comma = forwarded.indexOf(',');
+            return comma > 0 ? forwarded.substring(0, comma).trim() : forwarded.trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private static LoginUser requireLoginUser() {

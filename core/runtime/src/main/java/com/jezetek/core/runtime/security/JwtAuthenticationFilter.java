@@ -17,8 +17,8 @@ import java.io.IOException;
 /**
  * 从 Authorization: Bearer 头解析 JWT 并装配 Authentication。
  *
- * <p>无令牌/令牌非法/用户不存在时静默放行为匿名，
- * 由授权规则决定 401；令牌有效即认为已认证(无状态，不查会话)</p>
+ * <p>无令牌/令牌非法/jti 不在册(登出、强退、改密作废后)时静默放行为匿名，
+ * 由授权规则决定 401；令牌有效即认为已认证(用户状态回库加载)</p>
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -27,10 +27,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
 
+    private final SessionRegistry sessionRegistry;
+
     private final ObjectProvider<LoginUserLoader> loginUserLoader;
 
-    public JwtAuthenticationFilter(TokenService tokenService, ObjectProvider<LoginUserLoader> loginUserLoader) {
+    public JwtAuthenticationFilter(
+            TokenService tokenService,
+            SessionRegistry sessionRegistry,
+            ObjectProvider<LoginUserLoader> loginUserLoader
+    ) {
         this.tokenService = tokenService;
+        this.sessionRegistry = sessionRegistry;
         this.loginUserLoader = loginUserLoader;
     }
 
@@ -59,11 +66,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header == null || !header.startsWith(BEARER_PREFIX)) {
             return null;
         }
-        Long userId = tokenService.parse(header.substring(BEARER_PREFIX.length()));
-        if (userId == null) {
+        TokenService.TokenPayload payload = tokenService.parse(header.substring(BEARER_PREFIX.length()));
+        // jti 不在册 = 会话已撤销(登出/强退/改密)，与非法令牌同等对待
+        if (payload == null || !sessionRegistry.contains(payload.jti())) {
             return null;
         }
         LoginUserLoader loader = loginUserLoader.getIfAvailable();
-        return loader == null ? null : loader.load(userId);
+        return loader == null ? null : loader.load(payload.userId());
     }
 }
