@@ -78,6 +78,13 @@ export class UserService {
             _uri += encodeURIComponent(_value);
             _separator = '&';
         }
+        _value = options.deptId;
+        if (_value !== undefined && _value !== null) {
+            _uri += _separator
+            _uri += 'deptId='
+            _uri += encodeURIComponent(_value);
+            _separator = '&';
+        }
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<UserDto['UserService/DEFAULT_FETCHER']>>;
     }
     
@@ -85,7 +92,11 @@ export class UserService {
      * password 属性未提交(更新场景)时保持原值；
      * 提交了明文则落库前 BCrypt 加密。
      * 不能用 input.toEntity()：dto 生成的映射对未提交属性无条件 set null，
-     * 会把库里原值覆盖为 NULL，因此这里手工组装 draft 控制属性的加载态
+     * 会把库里原值覆盖为 NULL，因此这里手工组装 draft 控制属性的加载态。
+     * 
+     * <p>集合 id 视图(postIds/roleIds)的"是否提交"必须读字段而非 getter：
+     * 生成的集合 getter 懒初始化空列表(永远 != null)，未提交也会被当成
+     * "提交了空列表"而清空关联；提交了空列表则显式清空</p>
      */
     readonly saveUser: (options: UserServiceOptions['saveUser']) => Promise<
         UserDto['UserService/DEFAULT_FETCHER']
@@ -100,7 +111,8 @@ export type UserServiceOptions = {
         readonly pageIndex?: number | undefined, 
         readonly pageSize?: number | undefined, 
         readonly sortCode?: string | undefined, 
-        readonly specification: UserSpecification
+        readonly specification: UserSpecification, 
+        readonly deptId?: number | undefined
     }, 
     'findUser': {
         readonly id: number

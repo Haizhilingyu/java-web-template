@@ -8,6 +8,7 @@ import org.babyfish.jimmer.sql.fetcher.Fetcher;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -42,5 +43,23 @@ public class DeptRepository extends AbstractJavaRepository<Dept, Long> {
                 .select(table.id())
                 .execute()
                 .isEmpty();
+    }
+
+    /**
+     * 指定部门及其全部子孙部门的 id：用户列表按部门筛选(含子孙)用。
+     * 逐层下探，部门树深度有限，层数即查询次数
+     */
+    public List<Long> findSelfAndDescendantIds(long rootId) {
+        List<Long> ids = new ArrayList<>();
+        List<Long> frontier = List.of(rootId);
+        while (!frontier.isEmpty()) {
+            ids.addAll(frontier);
+            frontier = sql
+                    .createQuery(table)
+                    .where(table.parentId().in(frontier))
+                    .select(table.id())
+                    .execute();
+        }
+        return ids;
     }
 }

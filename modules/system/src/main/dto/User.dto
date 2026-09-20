@@ -31,6 +31,10 @@ input UserInput {
 
     enabled
 
+    id(dept) as deptId
+
+    id(posts) as postIds
+
     id(roles) as roleIds
 }
 

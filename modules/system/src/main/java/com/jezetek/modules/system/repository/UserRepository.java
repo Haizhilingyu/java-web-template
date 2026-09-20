@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -26,16 +27,20 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
 
     /**
      * 超级 QBE：Specification 描述动态查询条件，Fetcher 描述动态抓取形状，
-     * Pageable 描述分页排序，三者均由调用方按需组装
+     * Pageable 描述分页排序，三者均由调用方按需组装。
+     *
+     * @param deptIds 部门 id 集合过滤(含子孙由调用方解析)；null 表示不过滤
      */
     public Page<@NotNull User> find(
             Pageable pageable,
             Specification<User> specification,
+            @Nullable Collection<Long> deptIds,
             @Nullable Fetcher<User> fetcher
     ) {
         return sql
                 .createQuery(table)
                 .where(specification)
+                .where(deptIds == null ? null : table.deptId().in(deptIds))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),

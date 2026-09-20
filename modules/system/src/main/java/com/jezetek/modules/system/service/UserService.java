@@ -3,6 +3,7 @@ package com.jezetek.modules.system.service;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.User;
 import com.jezetek.modules.system.model.UserDraft;
+import com.jezetek.modules.system.repository.DeptRepository;
 import com.jezetek.modules.system.repository.UserRepository;
 import com.jezetek.modules.system.service.dto.UserInput;
 import com.jezetek.modules.system.service.dto.UserSpecification;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 /*
@@ -33,10 +35,13 @@ public class UserService implements Fetchers {
 
     private final UserRepository userRepository;
 
+    private final DeptRepository deptRepository;
+
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, DeptRepository deptRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.deptRepository = deptRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -47,11 +52,15 @@ public class UserService implements Fetchers {
             @RequestParam(defaultValue = "5") int pageSize,
             // sortCode 支持隐式关联排序，如 `roles.code asc`
             @RequestParam(defaultValue = "username asc") String sortCode,
-            UserSpecification specification
+            UserSpecification specification,
+            // 部门树点选筛选：按该部门及其全部子孙过滤，缺省不过滤
+            @RequestParam(required = false) Long deptId
     ) {
+        Collection<Long> deptIds = deptId == null ? null : deptRepository.findSelfAndDescendantIds(deptId);
         return userRepository.find(
                 PageRequest.of(pageIndex, pageSize, SortUtils.toSort(sortCode)),
                 specification,
+                deptIds,
                 DEFAULT_FETCHER
         );
     }
@@ -80,7 +89,11 @@ public class UserService implements Fetchers {
      * password 属性未提交(更新场景)时保持原值；
      * 提交了明文则落库前 BCrypt 加密。
      * 不能用 input.toEntity()：dto 生成的映射对未提交属性无条件 set null，
-     * 会把库里原值覆盖为 NULL，因此这里手工组装 draft 控制属性的加载态
+     * 会把库里原值覆盖为 NULL，因此这里手工组装 draft 控制属性的加载态。
+     *
+     * <p>集合 id 视图(postIds/roleIds)的"是否提交"必须读字段而非 getter：
+     * 生成的集合 getter 懒初始化空列表(永远 != null)，未提交也会被当成
+     * "提交了空列表"而清空关联；提交了空列表则显式清空</p>
      */
     @PreAuthorize("@perm.hasAny('system:user:add', 'system:user:edit')")
     @PutMapping
@@ -99,7 +112,13 @@ public class UserService implements Fetchers {
                 draft.setNickname(input.getNickname());
             }
             draft.setEnabled(input.isEnabled());
-            if (input.getRoleIds() != null) {
+            if (input.getDeptId() != null) {
+                draft.setDeptId(input.getDeptId());
+            }
+            if (isProvided(input, "postIds")) {
+                draft.setPostIds(input.getPostIds());
+            }
+            if (isProvided(input, "roleIds")) {
                 draft.setRoleIds(input.getRoleIds());
             }
         });
@@ -109,6 +128,21 @@ public class UserService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    /**
+     * 判断 dto 集合属性是否被客户端提交(字段是否被 setter 写过)，
+     * 绕开生成 getter 的懒初始化。字段名由本类内调用方写死，
+     * 与 User.dto 属性同步，编译期无法校验，有测试锁定语义
+     */
+    private static boolean isProvided(UserInput input, String field) {
+        try {
+            java.lang.reflect.Field f = UserInput.class.getDeclaredField(field);
+            f.setAccessible(true);
+            return f.get(input) != null;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("UserInput 缺少字段: " + field, e);
+        }
+    }
+
     @PreAuthorize("@perm.has('system:user:delete')")
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") long id) {
@@ -116,7 +150,8 @@ public class UserService implements Fetchers {
     }
 
     /**
-     * 默认抓取形状：User 全部标量属性(不含 tenant) + 角色的全部标量属性(不含 tenant)
+     * 默认抓取形状：User 全部标量属性(不含 tenant)
+     * + 角色/部门/岗位的全部标量属性(不含 tenant)
      */
     private static final Fetcher<User> DEFAULT_FETCHER =
             USER_FETCHER
@@ -124,6 +159,16 @@ public class UserService implements Fetchers {
                     .tenant(false)
                     .roles(
                             ROLE_FETCHER
+                                    .allScalarFields()
+                                    .tenant(false)
+                    )
+                    .dept(
+                            DEPT_FETCHER
+                                    .allScalarFields()
+                                    .tenant(false)
+                    )
+                    .posts(
+                            POST_FETCHER
                                     .allScalarFields()
                                     .tenant(false)
                     );

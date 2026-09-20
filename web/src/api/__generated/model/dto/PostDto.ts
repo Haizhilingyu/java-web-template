@@ -35,7 +35,7 @@ export type PostDto = {
          */
         readonly tenant: string;
         /**
-         * 岗位编码(如 CEO)，租户内唯一
+         * 岗位编码(如 CEO)，编码全局唯一(business_key 约束不含租户列)
          */
         readonly code: string;
         /**

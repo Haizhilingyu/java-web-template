@@ -61,7 +61,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: applicati
 
 - 实体是接口；`USER`/`ROLE` 是 SQL 保留字，表名用 `sys_*`（实体 `@Table` 与模块 `sql/*-schema.sql` 必须同步，`database-validation-mode: ERROR` 启动即校验）
 - **修改已加载的不可变对象用 `XxxDraft.$.produce(entity, draft -> ...)`**（producer 实例在生成类 `XxxDraft.$` 上），不存在 `ImmutableObjects.produce`
-- **`.dto` 生成的 `toEntity()` 对未提交属性无条件 set（含 null）**——"密码留空不改原值"这类部分更新不能直接 `input.toEntity()`，要手工组 draft 控制属性加载态（见 `UserService.saveUser`）；roleIds 未提供时也勿置空列表（会清空关联）
+- **`.dto` 生成 Input 的部分更新陷阱**：`toEntity()`/`saveCommand(input)` 对未提交标量无条件写 null（"密码留空不改原值"会失效）；且**集合 id 视图（roleIds/postIds 等）的 getter 懒初始化空列表**，`getXxx() != null` 永远为真，未提交也会被当成"提交了空列表"而清空关联。两类都要手工组 draft 才能部分更新，集合的"是否提交"只能读 Input 私有字段判断（见 `UserService.saveUser` + `isProvided`）
 - `.dto` 文件：校验注解必须**全限定名**且写在属性行**之前**；多参数函数必须 `as 别名`；改 `.dto` 后需重新编译
 - `@Key` upsert 要求键属性**全部加载**：可空外键做键时，根节点必须显式 `setParent(null)`（未加载 ≠ null，未加载会让 jimmer 判定业务键不完整拒绝保存）
 - 分页返回的是 **Spring 的 `org.springframework.data.domain.Page`**（`fetchPage + SpringPageFactory`），不是 jimmer 的 Page；总数用 `getTotalElements()`
