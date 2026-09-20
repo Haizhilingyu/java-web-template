@@ -1,3 +1,6 @@
+export * from './useDict';
+
+
 import * as echarts from 'echarts/core';
 import type { Ref, ShallowRef } from 'vue';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';

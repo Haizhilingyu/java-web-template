@@ -44,7 +44,7 @@ class AuthControllerTest {
 
     @Test
     void 登录后可拉取按角色过滤的动态路由() throws Exception {
-        // 测试上下文关闭了启动同步，这里显式执行一次(system 模块声明 1 目录 + 5 页面 + 20 按钮)
+        // 测试上下文关闭了启动同步，这里显式执行一次(system 模块声明 1 目录 + 6 页面 + 24 按钮)
         menuSyncService.sync();
 
         String token = login("admin", "123456");
@@ -53,7 +53,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].path").value("/system"))
                 .andExpect(jsonPath("$[0].component").value("LAYOUT"))
-                .andExpect(jsonPath("$[0].children.length()").value(5))
+                .andExpect(jsonPath("$[0].children.length()").value(6))
                 .andExpect(jsonPath("$[0].children[0].component").value("/system/user/index"))
                 .andExpect(jsonPath("$[0].children[0].meta.title").value("用户管理"))
                 .andReturn();

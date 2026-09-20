@@ -1,6 +1,8 @@
 -- 系统管理模块表结构(随模块 jar 自带，主应用通过 classpath*:sql/*-schema.sql 通配加载)
 -- 约束：模块之间不允许外键引用，模块内部建表顺序自洽
 
+drop table sys_dict_data if exists;
+drop table sys_dict_type if exists;
 drop table sys_user_post if exists;
 drop table sys_user_role_mapping if exists;
 drop table sys_role_menu_mapping if exists;
@@ -35,6 +37,41 @@ alter table sys_menu
         foreign key(parent_id)
             references sys_menu(id)
                 on delete set null;
+
+-- 字典类型(租户隔离)：type 为全局唯一编码，前端 useDict 按编码取条目
+create table sys_dict_type(
+    id identity(100, 1) not null,
+    type varchar(50) not null,
+    name varchar(50) not null,
+    description varchar(200),
+    enabled boolean not null default true,
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
+alter table sys_dict_type
+    add constraint business_key_sys_dict_type
+        unique(type);
+
+-- 字典条目(租户隔离)：同一字典内 value 唯一
+create table sys_dict_data(
+    id identity(100, 1) not null,
+    dict_type_id bigint not null,
+    label varchar(50) not null,
+    data_value varchar(50) not null,
+    sort_order integer not null,
+    enabled boolean not null default true,
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
+alter table sys_dict_data
+    add constraint business_key_sys_dict_data
+        unique(dict_type_id, data_value);
+alter table sys_dict_data
+    add constraint fk_sys_dict_data__type
+        foreign key(dict_type_id)
+            references sys_dict_type(id);
 
 -- 部门(租户隔离)树形结构
 create table sys_dept(

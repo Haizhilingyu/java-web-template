@@ -1,5 +1,7 @@
 export {AuthController} from './AuthController';
 export {DeptService} from './DeptService';
+export {DictDataService} from './DictDataService';
+export {DictTypeService} from './DictTypeService';
 export {JobService} from './JobService';
 export {MenuService} from './MenuService';
 export {PostService} from './PostService';

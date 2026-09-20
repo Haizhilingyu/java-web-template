@@ -34,7 +34,8 @@ public class SystemModuleProvider implements ModuleProvider {
                 "/api/v1/role/**",
                 "/api/v1/menu/**",
                 "/api/v1/dept/**",
-                "/api/v1/post/**"
+                "/api/v1/post/**",
+                "/api/v1/dict/**"
         );
     }
 
@@ -102,6 +103,17 @@ public class SystemModuleProvider implements ModuleProvider {
                                                 button("新增岗位", "system:post:add", 2),
                                                 button("编辑岗位", "system:post:edit", 3),
                                                 button("删除岗位", "system:post:delete", 4)
+                                        ),
+                                MenuNode.of("字典管理", MenuType.MENU)
+                                        .path("/system/dict")
+                                        .component("/system/dict/index")
+                                        .icon("book")
+                                        .sortOrder(6)
+                                        .children(
+                                                button("查询字典", "system:dict:list", 1),
+                                                button("新增字典", "system:dict:add", 2),
+                                                button("编辑字典", "system:dict:edit", 3),
+                                                button("删除字典", "system:dict:delete", 4)
                                         )
                         )
         );

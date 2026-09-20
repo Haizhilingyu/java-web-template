@@ -7,6 +7,19 @@ insert into sys_role(id, code, name, description, tenant, created_time, modified
     (2, 'USER', '普通用户', '基础查看权限', 'default', current_timestamp(), current_timestamp())
 ;
 
+-- 基础字典：是/否、通知/公告(公告类型在工单04消费)
+insert into sys_dict_type(id, type, name, description, enabled, tenant, created_time, modified_time) values
+    (1, 'sys_yes_no', '是/否', '通用布尔字典', true, 'default', current_timestamp(), current_timestamp()),
+    (2, 'sys_notice_type', '通知公告类型', '通知/公告分类', true, 'default', current_timestamp(), current_timestamp())
+;
+
+insert into sys_dict_data(id, dict_type_id, label, data_value, sort_order, enabled, tenant, created_time, modified_time) values
+    (1, 1, '是', 'Y', 1, true, 'default', current_timestamp(), current_timestamp()),
+    (2, 1, '否', 'N', 2, true, 'default', current_timestamp(), current_timestamp()),
+    (3, 2, '通知', '1', 1, true, 'default', current_timestamp(), current_timestamp()),
+    (4, 2, '公告', '2', 2, true, 'default', current_timestamp(), current_timestamp())
+;
+
 -- 默认部门树：总公司 + 三个部门(挂在总公司下)
 insert into sys_dept(id, name, parent_id, sort_order, enabled, leader, phone, email, tenant, created_time, modified_time) values
     (1, '总公司', null, 1, true, null, null, null, 'default', current_timestamp(), current_timestamp()),

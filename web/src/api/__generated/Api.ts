@@ -2,6 +2,8 @@ import type {Executor} from './';
 import {
     AuthController, 
     DeptService, 
+    DictDataService, 
+    DictTypeService, 
     JobService, 
     MenuService, 
     PostService, 
@@ -14,6 +16,10 @@ export class Api {
     readonly authController: AuthController
     
     readonly deptService: DeptService
+    
+    readonly dictDataService: DictDataService
+    
+    readonly dictTypeService: DictTypeService
     
     readonly menuService: MenuService
     
@@ -28,6 +34,8 @@ export class Api {
     constructor(executor: Executor) {
         this.authController = new AuthController(executor);
         this.deptService = new DeptService(executor);
+        this.dictDataService = new DictDataService(executor);
+        this.dictTypeService = new DictTypeService(executor);
         this.menuService = new MenuService(executor);
         this.postService = new PostService(executor);
         this.roleService = new RoleService(executor);

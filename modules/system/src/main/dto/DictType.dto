@@ -1,0 +1,37 @@
+/*
+ * 1.  本文件由 jimmer-apt 编译，修改本文件后需要重新构建项目
+ *     (若同时修改了其他 Java 代码，可直接在 IDEA 中点击 Run)
+ *
+ * 2.  实体定义在本模块 model 包，需要
+ *     com.jezetek.modules.system.service.DtoGeneration 上的
+ *     @EnableDtoGeneration 手动启用 DTO 文件编译
+ *
+ * 3.  input 属性块中的校验注解(jakarta.validation.constraints)会生成到
+ *     DictTypeInput 类上，由 service 保存方法上的 @Valid 触发校验
+ */
+
+export com.jezetek.modules.system.model.DictType
+    -> package com.jezetek.modules.system.service.dto
+
+input DictTypeInput {
+
+    id
+
+    @jakarta.validation.constraints.NotBlank(message = "字典编码不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "字典编码长度不能超过50")
+    @jakarta.validation.constraints.Pattern(regexp = "[a-z][a-z0-9_]*", message = "字典编码必须为小写字母开头，可含小写字母、数字和下划线")
+    type
+
+    @jakarta.validation.constraints.NotBlank(message = "字典名称不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "字典名称长度不能超过50")
+    name
+
+    @jakarta.validation.constraints.Size(max = 200, message = "描述长度不能超过200")
+    description
+
+    enabled
+}
+
+specification DictTypeSpecification {
+    like/i(name, type) as keyword
+}

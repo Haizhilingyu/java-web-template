@@ -40,7 +40,7 @@ class MenuSyncServiceTest {
         assertEquals("系统管理", root.name());
         assertEquals("M", root.type());
         assertEquals("system", root.moduleCode());
-        assertEquals(5, root.children().size());
+        assertEquals(6, root.children().size());
 
         Menu userMenu = root.children().getFirst();
         assertEquals("/system/user", userMenu.path());
@@ -49,9 +49,9 @@ class MenuSyncServiceTest {
         assertEquals("F", userMenu.children().getFirst().type());
         assertEquals("system:user:list", userMenu.children().getFirst().perms());
 
-        // 声明共 1 目录 + 5 页面 + 20 按钮 = 26 个节点
+        // 声明共 1 目录 + 6 页面 + 24 按钮 = 31 个节点
         long total = count();
-        assertEquals(26, total);
+        assertEquals(31, total);
 
         // 再次同步不产生重复数据
         menuSyncService.sync();
