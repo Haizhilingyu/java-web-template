@@ -1,0 +1,39 @@
+/*
+ * 1.  本文件由 jimmer-apt 编译，修改本文件后需要重新构建项目
+ *     (若同时修改了其他 Java 代码，可直接在 IDEA 中点击 Run)
+ *
+ * 2.  实体定义在本模块 model 包，需要
+ *     com.jezetek.modules.system.service.DtoGeneration 上的
+ *     @EnableDtoGeneration 手动启用 DTO 文件编译
+ *
+ * 3.  input 属性块中的校验注解(jakarta.validation.constraints)会生成到
+ *     DeptInput 类上，由 service 保存方法上的 @Valid 触发校验
+ */
+
+export com.jezetek.modules.system.model.Dept
+    -> package com.jezetek.modules.system.service.dto
+
+input DeptInput {
+
+    id
+
+    @jakarta.validation.constraints.NotBlank(message = "部门名不能为空")
+    @jakarta.validation.constraints.Size(max = 50, message = "部门名长度不能超过50")
+    name
+
+    id(parent) as parentId
+
+    @jakarta.validation.constraints.Min(value = 0, message = "排序号不能为负数")
+    sortOrder
+
+    enabled
+
+    @jakarta.validation.constraints.Size(max = 50, message = "负责人长度不能超过50")
+    leader
+
+    @jakarta.validation.constraints.Size(max = 50, message = "电话长度不能超过50")
+    phone
+
+    @jakarta.validation.constraints.Size(max = 100, message = "邮箱长度不能超过100")
+    email
+}

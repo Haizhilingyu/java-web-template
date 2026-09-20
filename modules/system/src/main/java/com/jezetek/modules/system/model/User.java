@@ -52,6 +52,37 @@ public interface User extends BaseEntity, TenantAware {
     boolean enabled();
 
     /**
+     * 所属部门，可空(未分配部门的用户)
+     */
+    @Nullable
+    @ManyToOne
+    Dept dept();
+
+    /**
+     * 担任的岗位，多对多关联
+     */
+    @ManyToMany
+    @JoinTable(
+            name = "sys_user_post",
+            joinColumnName = "USER_ID",
+            inverseJoinColumnName = "POST_ID"
+    )
+    List<Post> posts();
+
+    /**
+     * 关联属性 dept 的 id 视图
+     */
+    @Nullable
+    @IdView("dept")
+    Long deptId();
+
+    /**
+     * 关联属性 posts 的 id 视图
+     */
+    @IdView("posts")
+    List<Long> postIds();
+
+    /**
      * 当前用户拥有的所有角色，多对多关联
      */
     @ManyToMany(orderedProps = @OrderedProp("code"))

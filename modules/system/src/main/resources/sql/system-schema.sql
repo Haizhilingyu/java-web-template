@@ -1,11 +1,14 @@
 -- 系统管理模块表结构(随模块 jar 自带，主应用通过 classpath*:sql/*-schema.sql 通配加载)
 -- 约束：模块之间不允许外键引用，模块内部建表顺序自洽
 
+drop table sys_user_post if exists;
 drop table sys_user_role_mapping if exists;
 drop table sys_role_menu_mapping if exists;
 drop table sys_user if exists;
 drop table sys_role if exists;
 drop table sys_menu if exists;
+drop table sys_post if exists;
+drop table sys_dept if exists;
 
 -- 菜单(全局数据，无租户列)
 -- type: M 目录 / C 菜单(页面) / F 按钮
@@ -33,6 +36,43 @@ alter table sys_menu
             references sys_menu(id)
                 on delete set null;
 
+-- 部门(租户隔离)树形结构
+create table sys_dept(
+    id identity(100, 1) not null,
+    name varchar(50) not null,
+    parent_id bigint,
+    sort_order integer not null,
+    enabled boolean not null default true,
+    leader varchar(50),
+    phone varchar(50),
+    email varchar(100),
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
+alter table sys_dept
+    add constraint business_key_sys_dept
+        unique(parent_id, name);
+alter table sys_dept
+    add constraint fk_sys_dept__parent
+        foreign key(parent_id)
+            references sys_dept(id);
+
+-- 岗位(租户隔离)
+create table sys_post(
+    id identity(100, 1) not null,
+    code varchar(50) not null,
+    name varchar(50) not null,
+    sort_order integer not null,
+    enabled boolean not null default true,
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
+alter table sys_post
+    add constraint business_key_sys_post
+        unique(code);
+
 -- 角色(租户隔离)
 -- code=ADMIN 为内置超管：菜单与接口权限直通
 create table sys_role(
@@ -55,6 +95,7 @@ create table sys_user(
     password varchar(100),
     nickname varchar(50),
     enabled boolean not null,
+    dept_id bigint,
     tenant varchar(20) not null,
     created_time timestamp not null,
     modified_time timestamp not null
@@ -62,6 +103,10 @@ create table sys_user(
 alter table sys_user
     add constraint business_key_sys_user
         unique(username);
+alter table sys_user
+    add constraint fk_sys_user__dept
+        foreign key(dept_id)
+            references sys_dept(id);
 
 create table sys_user_role_mapping(
     user_id bigint not null,
@@ -97,4 +142,22 @@ alter table sys_role_menu_mapping
     add constraint fk_sys_role_menu_mapping__menu
         foreign key(menu_id)
             references sys_menu(id)
+                on delete cascade;
+
+create table sys_user_post(
+    user_id bigint not null,
+    post_id bigint not null
+);
+alter table sys_user_post
+    add constraint pk_sys_user_post
+        primary key(user_id, post_id);
+alter table sys_user_post
+    add constraint fk_sys_user_post__user
+        foreign key(user_id)
+            references sys_user(id)
+                on delete cascade;
+alter table sys_user_post
+    add constraint fk_sys_user_post__post
+        foreign key(post_id)
+            references sys_post(id)
                 on delete cascade;

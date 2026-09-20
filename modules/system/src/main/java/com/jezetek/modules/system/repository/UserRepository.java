@@ -54,4 +54,28 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
                 .select(table.fetch(fetcher))
                 .fetchOptional();
     }
+
+    /**
+     * 是否存在挂在指定部门下的用户：删除部门前校验
+     */
+    public boolean existsByDeptId(long deptId) {
+        return !sql
+                .createQuery(table)
+                .where(table.dept().id().eq(deptId))
+                .select(table.id())
+                .execute()
+                .isEmpty();
+    }
+
+    /**
+     * 是否有用户担任指定岗位：删除岗位前校验
+     */
+    public boolean existsByPostId(long postId) {
+        return !sql
+                .createQuery(table)
+                .where(table.posts(post -> post.id().eq(postId)))
+                .select(table.id())
+                .execute()
+                .isEmpty();
+    }
 }
