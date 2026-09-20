@@ -1,6 +1,8 @@
 -- 系统管理模块表结构(随模块 jar 自带，主应用通过 classpath*:sql/*-schema.sql 通配加载)
 -- 约束：模块之间不允许外键引用，模块内部建表顺序自洽
 
+drop table sys_notice if exists;
+drop table sys_config if exists;
 drop table sys_dict_data if exists;
 drop table sys_dict_type if exists;
 drop table sys_user_post if exists;
@@ -37,6 +39,33 @@ alter table sys_menu
         foreign key(parent_id)
             references sys_menu(id)
                 on delete set null;
+
+-- 参数配置(租户隔离)：configKey 全局唯一；决策——不预置无人读取的键
+create table sys_config(
+    id identity(100, 1) not null,
+    config_key varchar(100) not null,
+    config_name varchar(100) not null,
+    config_value varchar(500),
+    remark varchar(200),
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
+alter table sys_config
+    add constraint business_key_sys_config
+        unique(config_key);
+
+-- 公告(租户隔离)：仅管理端 CRUD，无用户侧展示面；content 为纯文本
+create table sys_notice(
+    id identity(100, 1) not null,
+    notice_title varchar(100) not null,
+    notice_type varchar(50) not null,
+    content clob,
+    enabled boolean not null default true,
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
 
 -- 字典类型(租户隔离)：type 为全局唯一编码，前端 useDict 按编码取条目
 create table sys_dict_type(

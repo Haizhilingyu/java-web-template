@@ -35,7 +35,9 @@ public class SystemModuleProvider implements ModuleProvider {
                 "/api/v1/menu/**",
                 "/api/v1/dept/**",
                 "/api/v1/post/**",
-                "/api/v1/dict/**"
+                "/api/v1/dict/**",
+                "/api/v1/config/**",
+                "/api/v1/notice/**"
         );
     }
 
@@ -114,6 +116,28 @@ public class SystemModuleProvider implements ModuleProvider {
                                                 button("新增字典", "system:dict:add", 2),
                                                 button("编辑字典", "system:dict:edit", 3),
                                                 button("删除字典", "system:dict:delete", 4)
+                                        ),
+                                MenuNode.of("参数配置", MenuType.MENU)
+                                        .path("/system/config")
+                                        .component("/system/config/index")
+                                        .icon("setting")
+                                        .sortOrder(7)
+                                        .children(
+                                                button("查询参数", "system:config:list", 1),
+                                                button("新增参数", "system:config:add", 2),
+                                                button("编辑参数", "system:config:edit", 3),
+                                                button("删除参数", "system:config:delete", 4)
+                                        ),
+                                MenuNode.of("公告管理", MenuType.MENU)
+                                        .path("/system/notice")
+                                        .component("/system/notice/index")
+                                        .icon("sound")
+                                        .sortOrder(8)
+                                        .children(
+                                                button("查询公告", "system:notice:list", 1),
+                                                button("新增公告", "system:notice:add", 2),
+                                                button("编辑公告", "system:notice:edit", 3),
+                                                button("删除公告", "system:notice:delete", 4)
                                         )
                         )
         );
