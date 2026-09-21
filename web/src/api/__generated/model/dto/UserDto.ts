@@ -80,6 +80,11 @@ export type UserDto = {
              * 角色描述
              */
             readonly description?: string | undefined;
+            /**
+             * 数据范围：1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人，默认 1。
+             * 仅在显式生效点(如用户管理分页列表)起作用
+             */
+            readonly dataScope: number;
         }>;
         /**
          * 所属部门，可空(未分配部门的用户)

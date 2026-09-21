@@ -1,6 +1,7 @@
 export type RoleDto = {
     /**
      * 默认抓取形状：Role 全部标量属性(不含 tenant) + 菜单的全部标量属性
+     * + 自定义数据范围部门(仅 id)
      */
     'RoleService/DEFAULT_FETCHER': {
         /**
@@ -36,6 +37,11 @@ export type RoleDto = {
          * 角色描述
          */
         readonly description?: string | undefined;
+        /**
+         * 数据范围：1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人，默认 1。
+         * 仅在显式生效点(如用户管理分页列表)起作用
+         */
+        readonly dataScope: number;
         /**
          * 当前角色可访问的所有菜单(含按钮)，多对多关联，
          * 接口/按钮权限取其中 perms 字段，路由取 M/C 类型节点
@@ -100,6 +106,15 @@ export type RoleDto = {
              * 手工创建的菜单为 null
              */
             readonly moduleCode?: string | undefined;
+        }>;
+        /**
+         * 数据范围=自定义(2)时的可见部门集合，语义为精确等于勾选集合
+         */
+        readonly customDepts: ReadonlyArray<{
+            /**
+             * 代理主键，自增，无业务含义
+             */
+            readonly id: number;
         }>;
     }
 }

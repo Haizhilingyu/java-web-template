@@ -1,7 +1,9 @@
 package com.jezetek.modules.system.security;
 
+import com.jezetek.core.runtime.security.DataScope;
 import com.jezetek.core.runtime.security.LoginUser;
 import com.jezetek.core.runtime.security.LoginUserLoader;
+import com.jezetek.modules.system.model.Dept;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Role;
 import com.jezetek.modules.system.model.User;
@@ -12,7 +14,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,21 +28,25 @@ import java.util.Set;
  * </ul>
  *
  * <p>权限组装规则：ADMIN 角色直通({@code *:*:*})；
- * 普通角色取其绑定菜单(含按钮)的 perms 并集</p>
+ * 普通角色取其绑定菜单(含按钮)的 perms 并集；
+ * 数据范围多角色取最大(编码最小)，登录时合并进会话</p>
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService, LoginUserLoader, Fetchers {
 
-    /** 登录/回库统一抓取形状：密文 + 启用状态 + 角色编码 + 角色菜单的权限标识 */
+    /** 登录/回库统一抓取形状：密文 + 启用状态 + 部门 + 角色(编码/数据范围/自定义部门) + 角色菜单的权限标识 */
     private static final Fetcher<User> AUTH_FETCHER =
             USER_FETCHER
                     .username()
                     .nickname()
                     .password()
                     .enabled()
+                    .dept(DEPT_FETCHER)
                     .roles(
                             ROLE_FETCHER
                                     .code()
+                                    .dataScope()
+                                    .customDepts(DEPT_FETCHER)
                                     .menus(
                                             MENU_FETCHER
                                                     .perms()
@@ -75,9 +83,12 @@ public class UserDetailsServiceImpl implements UserDetailsService, LoginUserLoad
     private static LoginUser toLoginUser(User user) {
         Set<String> roleCodes = new HashSet<>();
         Set<Long> roleIds = new HashSet<>();
+        List<DataScope> roleScopes = new ArrayList<>();
+        Long selfDeptId = user.dept() != null ? user.dept().id() : null;
         for (Role role : user.roles()) {
             roleCodes.add(role.code());
             roleIds.add(role.id());
+            roleScopes.add(toScope(role, selfDeptId));
         }
         return new LoginUser(
                 user.id(),
@@ -85,8 +96,22 @@ public class UserDetailsServiceImpl implements UserDetailsService, LoginUserLoad
                 user.nickname(),
                 roleCodes,
                 roleIds,
-                resolvePerms(roleCodes, user)
+                resolvePerms(roleCodes, user),
+                DataScope.broadest(roleScopes)
         );
+    }
+
+    /** 单个角色的数据范围(自定义=精确勾选集合；本部门及以下的子孙扩展由生效点负责) */
+    private static DataScope toScope(Role role, Long selfDeptId) {
+        DataScope.Level level = DataScope.Level.ofCode(role.dataScope());
+        return switch (level) {
+            case ALL -> DataScope.ALL;
+            case CUSTOM -> new DataScope(level, Set.copyOf(role.customDepts().stream()
+                    .map(Dept::id)
+                    .toList()), selfDeptId);
+            case DEPT, DEPT_AND_CHILD -> new DataScope(level, Set.of(), selfDeptId);
+            case SELF -> new DataScope(level, Set.of(), selfDeptId);
+        };
     }
 
     private static Set<String> resolvePerms(Set<String> roleCodes, User user) {

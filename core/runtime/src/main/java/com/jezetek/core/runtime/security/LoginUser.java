@@ -11,7 +11,8 @@ import java.util.Set;
  * 登录用户上下文对象，作为 Authentication 的 principal 存入 SecurityContext。
  *
  * <p>perms 为按钮/接口级权限标识(菜单上的 perms 字段)集合；
- * 超级管理员角色被赋值为 {"@code *:*:*"}，在 {@link PermissionChecker} 中直通</p>
+ * 超级管理员角色被赋值为 {"@code *:*:*"}，在 {@link PermissionChecker} 中直通；
+ * dataScope 为多角色合并后的数据范围(见 {@link DataScope})</p>
  */
 public record LoginUser(
         long id,
@@ -19,7 +20,8 @@ public record LoginUser(
         String nickname,
         Set<String> roles,
         Set<Long> roleIds,
-        Set<String> perms
+        Set<String> perms,
+        DataScope dataScope
 ) {
 
     /** 权限标识是否直通(超级管理员) */

@@ -7,6 +7,7 @@ drop table sys_notice if exists;
 drop table sys_config if exists;
 drop table sys_dict_data if exists;
 drop table sys_dict_type if exists;
+drop table sys_role_dept if exists;
 drop table sys_user_post if exists;
 drop table sys_user_role_mapping if exists;
 drop table sys_role_menu_mapping if exists;
@@ -176,6 +177,7 @@ create table sys_role(
     code varchar(50) not null,
     name varchar(50) not null,
     description varchar(200),
+    data_scope integer not null default 1,
     tenant varchar(20) not null,
     created_time timestamp not null,
     modified_time timestamp not null
@@ -183,6 +185,25 @@ create table sys_role(
 alter table sys_role
     add constraint business_key_sys_role
         unique(code);
+
+-- 角色-自定义数据范围部门关联(精确集合，无层级展开)
+create table sys_role_dept(
+    role_id bigint not null,
+    dept_id bigint not null
+);
+alter table sys_role_dept
+    add constraint pk_sys_role_dept
+        primary key(role_id, dept_id);
+alter table sys_role_dept
+    add constraint fk_sys_role_dept__role
+        foreign key(role_id)
+            references sys_role(id)
+                on delete cascade;
+alter table sys_role_dept
+    add constraint fk_sys_role_dept__dept
+        foreign key(dept_id)
+            references sys_dept(id)
+                on delete cascade;
 
 -- 用户(租户隔离)，password 为 BCrypt 密文
 create table sys_user(

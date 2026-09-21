@@ -44,11 +44,28 @@ public interface Role extends BaseEntity, TenantAware {
     String description();
 
     /**
+     * 数据范围：1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人，默认 1。
+     * 仅在显式生效点(如用户管理分页列表)起作用
+     */
+    int dataScope();
+
+    /**
      * 拥有当前角色的所有用户，多对多关联的反向端，
      * 映射关系由 User.roles 定义
      */
     @ManyToMany(mappedBy = "roles")
     List<User> users();
+
+    /**
+     * 数据范围=自定义(2)时的可见部门集合，语义为精确等于勾选集合
+     */
+    @ManyToMany
+    @JoinTable(
+            name = "sys_role_dept",
+            joinColumnName = "ROLE_ID",
+            inverseJoinColumnName = "DEPT_ID"
+    )
+    List<Dept> customDepts();
 
     /**
      * 当前角色可访问的所有菜单(含按钮)，多对多关联，
@@ -69,4 +86,10 @@ public interface Role extends BaseEntity, TenantAware {
      */
     @IdView("menus")
     List<Long> menuIds();
+
+    /**
+     * 关联属性 customDepts 的 id 视图
+     */
+    @IdView("customDepts")
+    List<Long> customDeptIds();
 }

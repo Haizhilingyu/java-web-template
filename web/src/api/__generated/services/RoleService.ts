@@ -66,6 +66,11 @@ export class RoleService {
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<Page<RoleDto['RoleService/DEFAULT_FETCHER']>>;
     }
     
+    /**
+     * 手工组装 draft(同 UserService.saveUser 的理由)：Input 的
+     * saveCommand/toEntity 对未提交属性无条件写 null；集合 id 视图的
+     * "是否提交"读字段判断(getter 懒初始化)。dataScope 未提交默认 1(全部)
+     */
     readonly saveRole: (options: RoleServiceOptions['saveRole']) => Promise<
         RoleDto['RoleService/DEFAULT_FETCHER']
     > = async(options) => {

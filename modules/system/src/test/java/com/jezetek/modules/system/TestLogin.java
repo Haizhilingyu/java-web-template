@@ -20,13 +20,15 @@ public final class TestLogin {
 
     public static final LoginUser ADMIN = new LoginUser(
             1L, "admin", "Administrator",
-            Set.of("ADMIN"), Set.of(1L), Set.of(LoginUser.ALL_PERMS)
+            Set.of("ADMIN"), Set.of(1L), Set.of(LoginUser.ALL_PERMS),
+            com.jezetek.core.runtime.security.DataScope.ALL
     );
 
     /** 与种子数据的 demo 用户一致：USER 角色，权限为空集合 */
     public static final LoginUser DEMO = new LoginUser(
             2L, "demo", "演示用户",
-            Set.of("USER"), Set.of(2L), Set.of()
+            Set.of("USER"), Set.of(2L), Set.of(),
+            com.jezetek.core.runtime.security.DataScope.ALL
     );
 
     private TestLogin() {

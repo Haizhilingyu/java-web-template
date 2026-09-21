@@ -53,6 +53,26 @@
         <t-form-item label="描述" name="description">
           <t-textarea v-model="form.description" />
         </t-form-item>
+        <t-form-item label="数据范围" name="dataScope">
+          <t-radio-group v-model="form.dataScope">
+            <t-radio-button v-for="opt in DATA_SCOPES" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </t-radio-button>
+          </t-radio-group>
+        </t-form-item>
+        <t-form-item v-if="form.dataScope === 2" label="可见部门" name="customDeptIds">
+          <!-- 精确等于勾选集合：checkStrictly 关闭父子联动，不自动补子孙 -->
+          <div class="menu-tree-box">
+            <t-tree
+              v-model="form.customDeptIds"
+              :data="deptTreeOptions"
+              checkable
+              hover
+              check-strictly
+              :expand-level="2"
+            />
+          </div>
+        </t-form-item>
         <t-form-item label="菜单授权" name="menuIds">
           <div class="menu-tree-box">
             <!-- TDesign Tree 的受控勾选是 v-model(modelValue)，写成 v-model:checked 不会同步值 -->
@@ -83,12 +103,26 @@
   import type { FormInstanceFunctions, FormRules, PageInfo, TableProps } from 'tdesign-vue-next';
   import { onMounted, reactive, ref } from 'vue';
 
-  import type { MenuDto, RoleDto } from '@/api/__generated/model/dto';
+  import type { DeptDto, MenuDto, RoleDto } from '@/api/__generated/model/dto';
   import type { RoleInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
 
   type RoleRow = RoleDto['RoleService/DEFAULT_FETCHER'];
   type MenuNode = MenuDto['MenuService/TREE_FETCHER'];
+  type DeptNode = DeptDto['DeptService/TREE_FETCHER'];
+  interface DeptOption {
+    label: string;
+    value: number;
+    children?: DeptOption[];
+  }
+
+  const DATA_SCOPES = [
+    { value: 1, label: '全部' },
+    { value: 2, label: '自定义' },
+    { value: 3, label: '本部门' },
+    { value: 4, label: '本部门及以下' },
+    { value: 5, label: '仅本人' },
+  ] as const;
 
   const columns: TableProps['columns'] = [
     { colKey: 'id', title: 'ID', width: 80 },
@@ -133,8 +167,12 @@
     code: '',
     name: '',
     description: '',
+    dataScope: 1,
+    customDeptIds: [] as number[],
     menuIds: [] as number[],
   });
+
+  const deptTreeOptions = ref<DeptOption[]>([]);
 
   const rules: FormRules = {
     code: [
@@ -166,6 +204,21 @@
     } finally {
       loading.value = false;
     }
+  }
+
+  async function loadDepts() {
+    const depts = await api.deptService.findDepts();
+    deptTreeOptions.value = toDeptOptions(depts);
+  }
+
+  function toDeptOptions(nodes: ReadonlyArray<DeptNode>): DeptOption[] {
+    return nodes.map((node) => {
+      const option: DeptOption = { label: node.name, value: node.id };
+      if (node.children?.length) {
+        option.children = toDeptOptions(node.children);
+      }
+      return option;
+    });
   }
 
   async function loadMenus() {
@@ -228,6 +281,8 @@
     form.code = row?.code ?? '';
     form.name = row?.name ?? '';
     form.description = row?.description ?? '';
+    form.dataScope = row?.dataScope ?? 1;
+    form.customDeptIds = row ? row.customDepts.map((dept) => dept.id) : [];
     form.menuIds = row ? row.menus.map((menu) => menu.id) : [];
     formVisible.value = true;
   }
@@ -244,6 +299,8 @@
         code: form.code,
         name: form.name,
         description: form.description ? form.description : undefined,
+        dataScope: form.dataScope,
+        customDeptIds: form.customDeptIds,
         menuIds: withAncestors(form.menuIds),
       };
       await api.roleService.saveRole({ body: input });
@@ -279,6 +336,7 @@
   onMounted(() => {
     load();
     loadMenus();
+    loadDepts();
   });
 </script>
 

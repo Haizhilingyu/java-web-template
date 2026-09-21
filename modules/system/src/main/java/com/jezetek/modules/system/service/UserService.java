@@ -1,6 +1,8 @@
 package com.jezetek.modules.system.service;
 
 import com.jezetek.core.runtime.log.Log;
+import com.jezetek.core.runtime.security.DataScope;
+import com.jezetek.core.runtime.security.SecurityUtils;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.User;
 import com.jezetek.modules.system.model.UserDraft;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 
 /*
@@ -57,11 +61,40 @@ public class UserService implements Fetchers {
             // 部门树点选筛选：按该部门及其全部子孙过滤，缺省不过滤
             @RequestParam(required = false) Long deptId
     ) {
-        Collection<Long> deptIds = deptId == null ? null : deptRepository.findSelfAndDescendantIds(deptId);
+        Collection<Long> treeDeptIds = deptId == null ? null : deptRepository.findSelfAndDescendantIds(deptId);
+        // 数据范围生效点(本批仅此一处，显式调用而非全局过滤器，避免误伤
+        // username 查重等必须全量可见的查询)：
+        // 超管/全部返回 null；CUSTOM=精确勾选集合；DEPT=仅本部门；
+        // DEPT_AND_CHILD=本部门+全部子孙；SELF=仅本人(user id 条件)
+        DataScope scope = DataScope.current();
+        if (scope == null) {
+            return userRepository.find(
+                    PageRequest.of(pageIndex, pageSize, SortUtils.toSort(sortCode)),
+                    specification,
+                    treeDeptIds,
+                    null,
+                    null,
+                    DEFAULT_FETCHER
+            );
+        }
+        Set<Long> scopedDeptIds = switch (scope.level()) {
+            case ALL -> null;
+            case CUSTOM -> scope.deptIds();
+            case DEPT -> scope.selfDeptId() == null ? Set.<Long>of() : Set.of(scope.selfDeptId());
+            case DEPT_AND_CHILD -> scope.selfDeptId() == null
+                    ? Set.<Long>of()
+                    : new HashSet<>(deptRepository.findSelfAndDescendantIds(scope.selfDeptId()));
+            case SELF -> null;
+        };
+        Long selfUserId = scope.level() == DataScope.Level.SELF
+                ? SecurityUtils.currentLoginUser().id()
+                : null;
         return userRepository.find(
                 PageRequest.of(pageIndex, pageSize, SortUtils.toSort(sortCode)),
                 specification,
-                deptIds,
+                treeDeptIds,
+                scopedDeptIds,
+                selfUserId,
                 DEFAULT_FETCHER
         );
     }

@@ -16,13 +16,15 @@ public final class TestLogin {
 
     public static final LoginUser ADMIN = new LoginUser(
             1L, "admin", "Administrator",
-            Set.of("ADMIN"), Set.of(1L), Set.of(LoginUser.ALL_PERMS)
+            Set.of("ADMIN"), Set.of(1L), Set.of(LoginUser.ALL_PERMS),
+            com.jezetek.core.runtime.security.DataScope.ALL
     );
 
     /** 只有 job:list 权限的普通用户，用于验证按钮级权限 */
     public static final LoginUser VIEWER = new LoginUser(
             2L, "viewer", "访客",
-            Set.of("USER"), Set.of(2L), Set.of("job:list")
+            Set.of("USER"), Set.of(2L), Set.of("job:list"),
+            com.jezetek.core.runtime.security.DataScope.ALL
     );
 
     private TestLogin() {
