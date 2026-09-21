@@ -62,7 +62,9 @@ public class SystemModuleProvider implements ModuleProvider {
                                                 button("查询用户", "system:user:list", 1).roles("USER"),
                                                 button("新增用户", "system:user:add", 2),
                                                 button("编辑用户", "system:user:edit", 3),
-                                                button("删除用户", "system:user:delete", 4)
+                                                button("删除用户", "system:user:delete", 4),
+                                                button("导出用户", "system:user:export", 5),
+                                                button("导入用户", "system:user:import", 6)
                                         ),
                                 MenuNode.of("角色管理", MenuType.MENU)
                                         .path("/system/role")

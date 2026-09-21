@@ -56,6 +56,12 @@
             <artifactId>easy-captcha</artifactId>
             <version>1.6.2</version>
         </dependency>
+        <!-- Excel 导入导出(工单03/04)：EasyExcel 停维护后的社区延续版，API 同构 -->
+        <dependency>
+            <groupId>cn.idev.excel</groupId>
+            <artifactId>fastexcel</artifactId>
+            <version>1.3.0</version>
+        </dependency>
         <!-- 单元测试(H2 内存库) -->
         <dependency>
             <groupId>com.h2database</groupId>

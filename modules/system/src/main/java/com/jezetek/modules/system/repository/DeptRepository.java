@@ -46,6 +46,18 @@ public class DeptRepository extends AbstractJavaRepository<Dept, Long> {
     }
 
     /**
+     * 部门是否存在：用户导入时校验部门编号(工单03)
+     */
+    public boolean existsById(long id) {
+        return !sql
+                .createQuery(table)
+                .where(table.id().eq(id))
+                .select(table.id())
+                .execute()
+                .isEmpty();
+    }
+
+    /**
      * 指定部门及其全部子孙部门的 id：用户列表按部门筛选(含子孙)用。
      * 逐层下探，部门树深度有限，层数即查询次数
      */

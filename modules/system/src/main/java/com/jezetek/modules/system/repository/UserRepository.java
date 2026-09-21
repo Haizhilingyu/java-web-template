@@ -13,9 +13,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -69,6 +71,23 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
             case "modifiedTime" -> table.modifiedTime();
             default -> null;
         };
+    }
+
+    /**
+     * 全量查询不分页(工单03 导出)：同 find 的过滤形状，按用户名排序保证导出稳定
+     */
+    public List<User> listAll(
+            Specification<User> specification,
+            @Nullable Collection<Long> treeDeptIds,
+            @Nullable Fetcher<User> fetcher
+    ) {
+        return sql
+                .createQuery(table)
+                .where(specification)
+                .where(treeDeptIds == null ? null : table.deptId().in(treeDeptIds))
+                .orderBy(PageOrders.translate(Sort.by("username"), UserRepository::sortable))
+                .select(table.fetch(fetcher))
+                .execute();
     }
 
     /**

@@ -19,6 +19,12 @@
           <t-row justify="space-between">
             <div class="left-operation-container">
               <t-button v-permission="'system:user:add'" @click="openForm()"> 新增用户 </t-button>
+              <t-button v-permission="'system:user:export'" variant="outline" :loading="exporting" @click="onExport">
+                导出
+              </t-button>
+              <t-button v-permission="'system:user:import'" variant="outline" @click="importVisible = true">
+                导入
+              </t-button>
             </div>
             <t-space break-line>
               <t-input v-model="query.keyword" placeholder="用户名/昵称" clearable class="search-item" />
@@ -117,6 +123,39 @@
       :body="`确认删除用户「${deleteTarget?.username}」？`"
       @confirm="doDelete"
     />
+
+    <!-- 导入弹窗：下载模板 + 选择文件 + 结果回显(工单03) -->
+    <t-dialog
+      v-model:visible="importVisible"
+      header="导入用户"
+      :footer="false"
+      width="560px"
+      @closed="resetImport"
+    >
+      <t-space direction="vertical" style="width: 100%">
+        <t-space>
+          <t-button variant="outline" @click="downloadTemplate"> 下载模板 </t-button>
+          <t-button theme="primary" :loading="importing" :disabled="!importFile" @click="doImport">
+            开始导入
+          </t-button>
+        </t-space>
+        <input ref="fileInput" type="file" accept=".xlsx,.xls" @change="onFileChange" />
+        <t-alert v-if="importResult" :theme="importResult.failures.length ? 'warning' : 'success'">
+          <template #message>
+            共 {{ importResult.total }} 行，成功 {{ importResult.successCount }} 行，失败
+            {{ importResult.failures.length }} 行
+          </template>
+        </t-alert>
+        <t-table
+          v-if="importResult && importResult.failures.length"
+          row-key="rowNum"
+          :data="importResult.failures"
+          :columns="failureColumns"
+          max-height="200"
+          size="small"
+        />
+      </t-space>
+    </t-dialog>
   </div>
 </template>
 
@@ -128,6 +167,7 @@
   import type { DeptDto, UserDto } from '@/api/__generated/model/dto';
   import type { UserInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
+  import { downloadFile, type ImportResult, uploadForJson } from '@/api/download';
 
   type UserRow = UserDto['UserService/DEFAULT_FETCHER'];
   type DeptNode = DeptDto['DeptService/TREE_FETCHER'];
@@ -341,6 +381,69 @@
   function confirmDelete(row: UserRow) {
     deleteTarget.value = row;
     deleteVisible.value = true;
+  }
+
+  // ------- 导入导出(工单03) -------
+  const exporting = ref(false);
+  const importVisible = ref(false);
+  const importing = ref(false);
+  const importFile = ref<File>();
+  const fileInput = ref<HTMLInputElement>();
+  const importResult = ref<ImportResult>();
+  const failureColumns = [
+    { colKey: 'rowNum', title: '行号', width: 80 },
+    { colKey: 'reason', title: '失败原因' },
+  ];
+
+  async function onExport() {
+    exporting.value = true;
+    try {
+      await downloadFile('/api/v1/user/export', {
+        keyword: query.keyword || undefined,
+        enabled: query.enabled,
+        roleName: query.roleName || undefined,
+        deptId: query.deptId,
+      });
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      exporting.value = false;
+    }
+  }
+
+  function downloadTemplate() {
+    downloadFile('/api/v1/user/import-template').catch((error) => {
+      MessagePlugin.error((error as Error).message);
+    });
+  }
+
+  function onFileChange(event: Event) {
+    const files = (event.target as HTMLInputElement).files;
+    importFile.value = files && files.length ? files[0] : undefined;
+  }
+
+  async function doImport() {
+    if (!importFile.value) {
+      return;
+    }
+    importing.value = true;
+    try {
+      importResult.value = await uploadForJson<ImportResult>('/api/v1/user/import', importFile.value);
+      MessagePlugin.success(`导入完成：成功 ${importResult.value.successCount} 行`);
+      load();
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      importing.value = false;
+    }
+  }
+
+  function resetImport() {
+    importFile.value = undefined;
+    importResult.value = undefined;
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
   }
 
   async function doDelete() {
