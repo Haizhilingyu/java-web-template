@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.core.runtime.security.SessionRegistry;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +54,7 @@ public class OnlineService {
     /**
      * 强退：删除注册表条目，目标令牌下一次请求即 401
      */
+    @Log(module = "在线用户", action = "强退用户")
     @PreAuthorize("@perm.has('system:online:forceLogout')")
     @DeleteMapping("/{jti}")
     public void forceLogout(@PathVariable("jti") String jti) {

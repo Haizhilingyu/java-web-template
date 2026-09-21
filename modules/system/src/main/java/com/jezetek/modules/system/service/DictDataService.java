@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.DictData;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.repository.DictDataRepository;
@@ -62,6 +63,7 @@ public class DictDataService implements Fetchers {
         return dictDataRepository.findEnabledByType(type);
     }
 
+    @Log(module = "字典管理", action = "保存字典条目")
     @PreAuthorize("@perm.hasAny('system:dict:add', 'system:dict:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") DictData saveDictData(
@@ -73,6 +75,7 @@ public class DictDataService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    @Log(module = "字典管理", action = "删除字典条目")
     @PreAuthorize("@perm.has('system:dict:delete')")
     @DeleteMapping("/{id}")
     public void deleteDictData(@PathVariable("id") long id) {

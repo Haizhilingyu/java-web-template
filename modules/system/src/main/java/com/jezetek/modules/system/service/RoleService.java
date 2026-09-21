@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Role;
 import com.jezetek.modules.system.repository.RoleRepository;
@@ -55,6 +56,7 @@ public class RoleService implements Fetchers {
         return roleRepository.findById(id, DEFAULT_FETCHER);
     }
 
+    @Log(module = "角色管理", action = "保存角色")
     @PreAuthorize("@perm.hasAny('system:role:add', 'system:role:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Role saveRole(
@@ -66,6 +68,7 @@ public class RoleService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    @Log(module = "角色管理", action = "删除角色")
     @PreAuthorize("@perm.has('system:role:delete')")
     @DeleteMapping("/{id}")
     public void deleteRole(@PathVariable("id") long id) {

@@ -1,6 +1,7 @@
 -- 系统管理模块表结构(随模块 jar 自带，主应用通过 classpath*:sql/*-schema.sql 通配加载)
 -- 约束：模块之间不允许外键引用，模块内部建表顺序自洽
 
+drop table sys_oper_log if exists;
 drop table sys_logininfor if exists;
 drop table sys_notice if exists;
 drop table sys_config if exists;
@@ -40,6 +41,23 @@ alter table sys_menu
         foreign key(parent_id)
             references sys_menu(id)
                 on delete set null;
+
+-- 操作日志(租户隔离)：@Log 标注的写操作由切面异步落库
+create table sys_oper_log(
+    id identity(100, 1) not null,
+    module varchar(50) not null,
+    action varchar(50) not null,
+    operator varchar(50) not null,
+    uri varchar(200),
+    params varchar(2000),
+    result varchar(2000),
+    error_msg varchar(2000),
+    cost_ms bigint not null,
+    success boolean not null,
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
 
 -- 登录日志(租户隔离)：登录成功/失败/登出由认证流程写入，管理端只读+清空
 create table sys_logininfor(

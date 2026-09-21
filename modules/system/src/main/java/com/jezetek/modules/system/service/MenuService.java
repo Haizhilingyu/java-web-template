@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Menu;
 import com.jezetek.modules.system.repository.MenuRepository;
@@ -67,6 +68,7 @@ public class MenuService implements Fetchers {
         return menuRepository.findById(id, DEFAULT_FETCHER);
     }
 
+    @Log(module = "菜单管理", action = "保存菜单")
     @PreAuthorize("@perm.hasAny('system:menu:add', 'system:menu:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Menu saveMenu(
@@ -78,6 +80,7 @@ public class MenuService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    @Log(module = "菜单管理", action = "删除菜单")
     @PreAuthorize("@perm.has('system:menu:delete')")
     @DeleteMapping("/{id}")
     public void deleteMenu(@PathVariable("id") long id) {

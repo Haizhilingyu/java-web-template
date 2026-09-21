@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Notice;
 import com.jezetek.modules.system.repository.NoticeRepository;
@@ -51,6 +52,7 @@ public class NoticeService implements Fetchers {
     /**
      * 公告无自然业务键：NON_IDEMPOTENT_UPSERT 表示有 id 更新、无 id 插入
      */
+    @Log(module = "公告管理", action = "保存公告")
     @PreAuthorize("@perm.hasAny('system:notice:add', 'system:notice:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Notice saveNotice(
@@ -63,6 +65,7 @@ public class NoticeService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    @Log(module = "公告管理", action = "删除公告")
     @PreAuthorize("@perm.has('system:notice:delete')")
     @DeleteMapping("/{id}")
     public void deleteNotice(@PathVariable("id") long id) {

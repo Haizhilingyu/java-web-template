@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.core.runtime.BusinessException;
 import com.jezetek.modules.system.model.Dept;
 import com.jezetek.modules.system.model.Fetchers;
@@ -52,6 +53,7 @@ public class DeptService implements Fetchers {
         return deptRepository.findById(id, DEFAULT_FETCHER);
     }
 
+    @Log(module = "部门管理", action = "保存部门")
     @PreAuthorize("@perm.hasAny('system:dept:add', 'system:dept:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Dept saveDept(
@@ -67,6 +69,7 @@ public class DeptService implements Fetchers {
      * 生命周期约束：存在子部门或部门下有用户时禁止删除；
      * 禁用不追溯，已挂用户照常生效
      */
+    @Log(module = "部门管理", action = "删除部门")
     @PreAuthorize("@perm.has('system:dept:delete')")
     @DeleteMapping("/{id}")
     public void deleteDept(@PathVariable("id") long id) {

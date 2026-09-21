@@ -10,6 +10,7 @@ import {
     MenuService, 
     NoticeService, 
     OnlineService, 
+    OperLogService, 
     PostService, 
     RoleService, 
     UserService
@@ -35,6 +36,8 @@ export class Api {
     
     readonly onlineService: OnlineService
     
+    readonly operLogService: OperLogService
+    
     readonly postService: PostService
     
     readonly roleService: RoleService
@@ -53,6 +56,7 @@ export class Api {
         this.menuService = new MenuService(executor);
         this.noticeService = new NoticeService(executor);
         this.onlineService = new OnlineService(executor);
+        this.operLogService = new OperLogService(executor);
         this.postService = new PostService(executor);
         this.roleService = new RoleService(executor);
         this.userService = new UserService(executor);

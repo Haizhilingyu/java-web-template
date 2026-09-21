@@ -41,6 +41,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- 操作日志切面(@Aspect 环绕通知)；Boot 4 起无 aop starter，直接引 AspectJ -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+        </dependency>
         <!-- 单元测试(H2 内存库) -->
         <dependency>
             <groupId>com.h2database</groupId>

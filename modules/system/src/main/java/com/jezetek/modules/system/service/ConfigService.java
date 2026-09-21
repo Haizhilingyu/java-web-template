@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.Config;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.repository.ConfigRepository;
@@ -57,6 +58,7 @@ public class ConfigService implements Fetchers {
         return configRepository.findByConfigKey(key, DEFAULT_FETCHER).orElse(null);
     }
 
+    @Log(module = "参数配置", action = "保存参数")
     @PreAuthorize("@perm.hasAny('system:config:add', 'system:config:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Config saveConfig(
@@ -68,6 +70,7 @@ public class ConfigService implements Fetchers {
                 .getModifiedEntity();
     }
 
+    @Log(module = "参数配置", action = "删除参数")
     @PreAuthorize("@perm.has('system:config:delete')")
     @DeleteMapping("/{id}")
     public void deleteConfig(@PathVariable("id") long id) {

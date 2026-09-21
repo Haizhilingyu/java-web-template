@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.core.runtime.BusinessException;
 import com.jezetek.modules.system.model.DictType;
 import com.jezetek.modules.system.model.Fetchers;
@@ -55,6 +56,7 @@ public class DictTypeService implements Fetchers {
     /**
      * 生命周期约束：字典下存在条目时禁止删除，防止误删整套字典
      */
+    @Log(module = "字典管理", action = "删除字典类型")
     @PreAuthorize("@perm.has('system:dict:delete')")
     @DeleteMapping("/{id}")
     public void deleteDictType(@PathVariable("id") long id) {
@@ -64,6 +66,7 @@ public class DictTypeService implements Fetchers {
         dictTypeRepository.deleteById(id);
     }
 
+    @Log(module = "字典管理", action = "保存字典类型")
     @PreAuthorize("@perm.hasAny('system:dict:add', 'system:dict:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") DictType saveDictType(

@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.core.runtime.BusinessException;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Post;
@@ -61,6 +62,7 @@ public class PostService implements Fetchers {
         return postRepository.findById(id, DEFAULT_FETCHER);
     }
 
+    @Log(module = "岗位管理", action = "保存岗位")
     @PreAuthorize("@perm.hasAny('system:post:add', 'system:post:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") Post savePost(
@@ -76,6 +78,7 @@ public class PostService implements Fetchers {
      * 生命周期约束：岗位被用户绑定时禁止删除；
      * 禁用不追溯，已担任该岗位的用户照常生效
      */
+    @Log(module = "岗位管理", action = "删除岗位")
     @PreAuthorize("@perm.has('system:post:delete')")
     @DeleteMapping("/{id}")
     public void deletePost(@PathVariable("id") long id) {

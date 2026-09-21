@@ -8,6 +8,7 @@ export {LogininforService} from './LogininforService';
 export {MenuService} from './MenuService';
 export {NoticeService} from './NoticeService';
 export {OnlineService} from './OnlineService';
+export {OperLogService} from './OperLogService';
 export {PostService} from './PostService';
 export {RoleService} from './RoleService';
 export {UserService} from './UserService';

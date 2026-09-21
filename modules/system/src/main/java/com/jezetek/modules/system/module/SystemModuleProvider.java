@@ -147,11 +147,20 @@ public class SystemModuleProvider implements ModuleProvider {
                         .icon("chart")
                         .sortOrder(3)
                         .children(
+                                MenuNode.of("操作日志", MenuType.MENU)
+                                        .path("/monitor/operlog")
+                                        .component("/monitor/operlog/index")
+                                        .icon("history")
+                                        .sortOrder(1)
+                                        .children(
+                                                button("查询操作日志", "system:log:list", 1),
+                                                button("清空操作日志", "system:log:clear", 2)
+                                        ),
                                 MenuNode.of("登录日志", MenuType.MENU)
                                         .path("/monitor/logininfor")
                                         .component("/monitor/logininfor/index")
                                         .icon("time")
-                                        .sortOrder(1)
+                                        .sortOrder(2)
                                         .children(
                                                 button("查询登录日志", "system:log:list", 1),
                                                 button("清空登录日志", "system:log:clear", 2)
@@ -160,7 +169,7 @@ public class SystemModuleProvider implements ModuleProvider {
                                         .path("/monitor/online")
                                         .component("/monitor/online/index")
                                         .icon("internet")
-                                        .sortOrder(2)
+                                        .sortOrder(3)
                                         .children(
                                                 button("查询在线用户", "system:online:list", 1),
                                                 button("强退用户", "system:online:forceLogout", 2)

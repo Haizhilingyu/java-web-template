@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.service;
 
+import com.jezetek.core.runtime.log.Log;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.User;
 import com.jezetek.modules.system.model.UserDraft;
@@ -95,6 +96,7 @@ public class UserService implements Fetchers {
      * 生成的集合 getter 懒初始化空列表(永远 != null)，未提交也会被当成
      * "提交了空列表"而清空关联；提交了空列表则显式清空</p>
      */
+    @Log(module = "用户管理", action = "保存用户")
     @PreAuthorize("@perm.hasAny('system:user:add', 'system:user:edit')")
     @PutMapping
     public @FetchBy("DEFAULT_FETCHER") User saveUser(
@@ -143,6 +145,7 @@ public class UserService implements Fetchers {
         }
     }
 
+    @Log(module = "用户管理", action = "删除用户")
     @PreAuthorize("@perm.has('system:user:delete')")
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") long id) {
