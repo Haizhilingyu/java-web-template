@@ -2,7 +2,7 @@
 
 全栈模板：Spring Boot 4 + Jimmer ORM + Spring Security(JWT) 多模块后端（Maven，参照若依的模块化思路），Vue3 + TDesign 前端（动态路由 + 按钮级权限），Node 代码生成器。
 
-> **新会话从这里开始**：下一批开发任务（部门岗位/字典参数公告/日志监控/数据权限/个人中心）见 `docs/ROADMAP.md`，按批次实施。
+> **新会话从这里开始**：下一批开发任务（登录安全/Excel 导入导出/页面补全包/首页轻量版）见 `docs/ROADMAP.md`，按批次实施。
 
 ## 目录结构
 
