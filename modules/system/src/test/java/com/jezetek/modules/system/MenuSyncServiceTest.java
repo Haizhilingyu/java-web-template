@@ -35,7 +35,7 @@ class MenuSyncServiceTest {
         menuSyncService.sync();
 
         List<Menu> roots = menuRepository.findRootMenus(TREE_FETCHER);
-        assertEquals(1, roots.size());
+        assertEquals(2, roots.size());
         Menu root = roots.getFirst();
         assertEquals("系统管理", root.name());
         assertEquals("M", root.type());
@@ -49,14 +49,14 @@ class MenuSyncServiceTest {
         assertEquals("F", userMenu.children().getFirst().type());
         assertEquals("system:user:list", userMenu.children().getFirst().perms());
 
-        // 声明共 1 目录 + 8 页面 + 32 按钮 = 41 个节点
+        // 声明共 2 目录 + 10 页面 + 36 按钮 = 48 个节点
         long total = count();
-        assertEquals(41, total);
+        assertEquals(48, total);
 
         // 再次同步不产生重复数据
         menuSyncService.sync();
         assertEquals(total, count());
-        assertEquals(1, menuRepository.findRootMenus(TREE_FETCHER).size());
+        assertEquals(2, menuRepository.findRootMenus(TREE_FETCHER).size());
 
         // USER 角色按声明获得：目录 + 用户管理 + 查询按钮
         Role userRole = roleRepository.findByCode("USER", ROLE_FETCHER).orElseThrow();

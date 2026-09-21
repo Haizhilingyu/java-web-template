@@ -6,8 +6,10 @@ import {
     DictDataService, 
     DictTypeService, 
     JobService, 
+    LogininforService, 
     MenuService, 
     NoticeService, 
+    OnlineService, 
     PostService, 
     RoleService, 
     UserService
@@ -25,9 +27,13 @@ export class Api {
     
     readonly dictTypeService: DictTypeService
     
+    readonly logininforService: LogininforService
+    
     readonly menuService: MenuService
     
     readonly noticeService: NoticeService
+    
+    readonly onlineService: OnlineService
     
     readonly postService: PostService
     
@@ -43,8 +49,10 @@ export class Api {
         this.deptService = new DeptService(executor);
         this.dictDataService = new DictDataService(executor);
         this.dictTypeService = new DictTypeService(executor);
+        this.logininforService = new LogininforService(executor);
         this.menuService = new MenuService(executor);
         this.noticeService = new NoticeService(executor);
+        this.onlineService = new OnlineService(executor);
         this.postService = new PostService(executor);
         this.roleService = new RoleService(executor);
         this.userService = new UserService(executor);

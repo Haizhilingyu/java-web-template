@@ -63,4 +63,9 @@ public class SessionRegistry {
     public Collection<SessionInfo> all() {
         return cache.asMap().values();
     }
+
+    /** 全部在册会话的不可变快照(jti → 会话信息)，供在线用户列表回传 jti */
+    public Map<String, SessionInfo> snapshot() {
+        return Map.copyOf(cache.asMap());
+    }
 }

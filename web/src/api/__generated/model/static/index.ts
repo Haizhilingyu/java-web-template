@@ -15,6 +15,7 @@ export type {MenuInput} from './MenuInput';
 export type {MenuSpecification} from './MenuSpecification';
 export type {NoticeInput} from './NoticeInput';
 export type {NoticeSpecification} from './NoticeSpecification';
+export type {OnlineService_OnlineUser} from './OnlineService_OnlineUser';
 export type {Page} from './Page';
 export type {Pageable} from './Pageable';
 export type {PostInput} from './PostInput';

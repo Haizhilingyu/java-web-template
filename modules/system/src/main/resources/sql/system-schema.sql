@@ -1,6 +1,7 @@
 -- 系统管理模块表结构(随模块 jar 自带，主应用通过 classpath*:sql/*-schema.sql 通配加载)
 -- 约束：模块之间不允许外键引用，模块内部建表顺序自洽
 
+drop table sys_logininfor if exists;
 drop table sys_notice if exists;
 drop table sys_config if exists;
 drop table sys_dict_data if exists;
@@ -39,6 +40,17 @@ alter table sys_menu
         foreign key(parent_id)
             references sys_menu(id)
                 on delete set null;
+
+-- 登录日志(租户隔离)：登录成功/失败/登出由认证流程写入，管理端只读+清空
+create table sys_logininfor(
+    id identity(100, 1) not null,
+    username varchar(50) not null,
+    ip varchar(50) not null,
+    message varchar(255),
+    tenant varchar(20) not null,
+    created_time timestamp not null,
+    modified_time timestamp not null
+);
 
 -- 参数配置(租户隔离)：configKey 全局唯一；决策——不预置无人读取的键
 create table sys_config(

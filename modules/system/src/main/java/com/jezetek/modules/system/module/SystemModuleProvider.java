@@ -37,15 +37,16 @@ public class SystemModuleProvider implements ModuleProvider {
                 "/api/v1/post/**",
                 "/api/v1/dict/**",
                 "/api/v1/config/**",
-                "/api/v1/notice/**"
+                "/api/v1/notice/**",
+                "/api/v1/logininfor/**",
+                "/api/v1/online/**"
         );
     }
 
     @Override
     public List<MenuNode> menus() {
         return List.of(
-                MenuNode.of("系统管理", MenuType.DIR)
-                        .path("/system")
+                MenuNode.of("系统管理", MenuType.DIR)                        .path("/system")
                         .icon("setting")
                         .sortOrder(1)
                         .roles("USER")
@@ -139,10 +140,34 @@ public class SystemModuleProvider implements ModuleProvider {
                                                 button("编辑公告", "system:notice:edit", 3),
                                                 button("删除公告", "system:notice:delete", 4)
                                         )
+                        ),
+                // 系统监控目录：登录日志/在线用户由本工单创建，操作日志(工单07)落地时在同一目录追加同名节点
+                MenuNode.of("系统监控", MenuType.DIR)
+                        .path("/monitor")
+                        .icon("chart")
+                        .sortOrder(3)
+                        .children(
+                                MenuNode.of("登录日志", MenuType.MENU)
+                                        .path("/monitor/logininfor")
+                                        .component("/monitor/logininfor/index")
+                                        .icon("time")
+                                        .sortOrder(1)
+                                        .children(
+                                                button("查询登录日志", "system:log:list", 1),
+                                                button("清空登录日志", "system:log:clear", 2)
+                                        ),
+                                MenuNode.of("在线用户", MenuType.MENU)
+                                        .path("/monitor/online")
+                                        .component("/monitor/online/index")
+                                        .icon("internet")
+                                        .sortOrder(2)
+                                        .children(
+                                                button("查询在线用户", "system:online:list", 1),
+                                                button("强退用户", "system:online:forceLogout", 2)
+                                        )
                         )
         );
     }
-
     private static MenuNode button(String name, String perms, int sortOrder) {
         return MenuNode.of(name, MenuType.BUTTON).perms(perms).sortOrder(sortOrder);
     }

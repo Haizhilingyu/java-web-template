@@ -4,18 +4,27 @@ import com.jezetek.core.runtime.security.LoginUser;
 import com.jezetek.core.runtime.security.SecurityUtils;
 import com.jezetek.core.runtime.security.SessionRegistry;
 import com.jezetek.core.runtime.security.TokenService;
+import com.jezetek.modules.system.service.LoginLogWriter;
+import com.jezetek.modules.system.service.LogininforService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 
 /**
  * 登录/登出/用户信息/动态路由。除 login 外均要求携带有效 JWT
  * (由 core 的 SecurityConfig 对 /auth/** 强制)。
- * 登录失败由 {@link AuthExceptionHandler} 统一转 401 JSON
+ * 登录失败由 {@link AuthExceptionHandler} 统一转 401 JSON。
+ *
+ * <p>注意：方法不要声明 HttpServletRequest/Response 参数——
+ * jimmer-apt 为 API 生成元数据时无法解析 servlet 类型(编译期 NPE)，
+ * 一律经 {@link #currentRequest()} 获取</p>
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -27,37 +36,49 @@ public class AuthController {
 
     private final SessionRegistry sessionRegistry;
 
+    private final LoginLogWriter loginLogWriter;
+
     private final MenuRouteService menuRouteService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
             SessionRegistry sessionRegistry,
+            LoginLogWriter loginLogWriter,
             MenuRouteService menuRouteService
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
         this.sessionRegistry = sessionRegistry;
+        this.loginLogWriter = loginLogWriter;
         this.menuRouteService = menuRouteService;
     }
 
-    /** 认证成功签发 JWT 并登记会话(ADR-0001) */
+    /** 认证成功签发 JWT 并登记会话(ADR-0001)；登录日志记录成功/失败 */
     @PostMapping("/login")
-    public AuthModels.LoginResult login(
-            @Valid @RequestBody AuthModels.LoginRequest request,
-            HttpServletRequest httpRequest
-    ) {
-        var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
+    public AuthModels.LoginResult login(@Valid @RequestBody AuthModels.LoginRequest request) {
+        String ip = clientIp();
+        org.springframework.security.core.Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password())
+            );
+        } catch (DisabledException e) {
+            loginLogWriter.append(request.username(), ip, "登录失败：账号已禁用");
+            throw e;
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            loginLogWriter.append(request.username(), ip, "登录失败：用户名或密码错误");
+            throw e;
+        }
         LoginUserDetails details = (LoginUserDetails) authentication.getPrincipal();
         LoginUser loginUser = details.loginUser();
         String token = tokenService.create(
                 details.userId(),
                 loginUser.username(),
                 loginUser.nickname(),
-                clientIp(httpRequest)
+                ip
         );
+        loginLogWriter.append(loginUser.username(), ip, "登录成功");
         return new AuthModels.LoginResult(token, null);
     }
 
@@ -84,30 +105,36 @@ public class AuthController {
      * 同用户其他并存会话不受影响(ADR-0001)
      */
     @PostMapping("/logout")
-    public void logout(HttpServletRequest request) {
-        String token = bearerToken(request);
+    public void logout() {
+        HttpServletRequest request = currentRequest();
+        String header = request.getHeader("Authorization");
+        String token = header != null && header.startsWith("Bearer ")
+                ? header.substring("Bearer ".length())
+                : null;
         TokenService.TokenPayload payload = tokenService.parse(token);
         if (payload != null) {
+            LoginUser user = SecurityUtils.currentLoginUser();
+            loginLogWriter.append(
+                    user != null ? user.username() : "unknown",
+                    clientIp(),
+                    "登出"
+            );
             sessionRegistry.remove(payload.jti());
         }
     }
 
-    private static String bearerToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring("Bearer ".length());
-        }
-        return null;
+    private static HttpServletRequest currentRequest() {
+        return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
     }
 
-    private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
+    private static String clientIp() {
+        String forwarded = currentRequest().getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             // 多级代理取首个(客户端真实 IP)
             int comma = forwarded.indexOf(',');
             return comma > 0 ? forwarded.substring(0, comma).trim() : forwarded.trim();
         }
-        return request.getRemoteAddr();
+        return currentRequest().getRemoteAddr();
     }
 
     private static LoginUser requireLoginUser() {
