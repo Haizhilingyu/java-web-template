@@ -210,6 +210,15 @@ function genRepository(schema: Schema, entity: EntityDef): string {
     const childrenProp = entity.props.find(p => p.kind === 'oneToMany')?.name ?? 'children';
     const capitalizeLocal = capitalize;
 
+    // sortCode 属性白名单：与手写仓库同款(见 UserRepository.sortable / core PageOrders)；
+    // BaseEntity 的 createdTime/modifiedTime 不在 schema props 里，这里补上
+    const sortableProps = entity.props
+        .filter((p): p is ScalarProp => p.kind === 'scalar' && p.name !== 'tenant')
+        .map(p => p.name);
+    if (entity.baseEntity !== false) {
+        sortableProps.push('createdTime', 'modifiedTime');
+    }
+
     const treeMethod = isTreeEntity && selfRef
         ? `
     /**
@@ -249,12 +258,14 @@ function genRepository(schema: Schema, entity: EntityDef): string {
 
     return `package ${pkg}.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
 import ${pkg}.model.${entity.name};
 import ${pkg}.model.${entity.name}Table;
 import org.babyfish.jimmer.Specification;
 import org.babyfish.jimmer.spring.repo.support.AbstractJavaRepository;
 import org.babyfish.jimmer.spring.repository.support.SpringPageFactory;
 import org.babyfish.jimmer.sql.JSqlClient;
+import org.babyfish.jimmer.sql.ast.Expression;
 import org.babyfish.jimmer.sql.fetcher.Fetcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -273,7 +284,8 @@ public class ${entity.name}Repository extends AbstractJavaRepository<${entity.na
 
     /**
      * 超级 QBE：Specification 描述动态查询条件，Fetcher 描述动态抓取形状，
-     * Pageable 描述分页排序，三者均由调用方按需组装
+     * Pageable 描述分页排序，三者均由调用方按需组装。
+     * jimmer fetchPage 不读 Pageable 的 Sort，sortCode 在此显式翻译为 orderBy
      */
     public Page<@NotNull ${entity.name}> find(
             Pageable pageable,
@@ -283,12 +295,21 @@ public class ${entity.name}Repository extends AbstractJavaRepository<${entity.na
         return sql
                 .createQuery(table)
                 .where(specification)
+                .orderBy(PageOrders.translate(pageable.getSort(), ${entity.name}Repository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         SpringPageFactory.getInstance()
                 );
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+${sortableProps.map((p) => '            case "' + p + '" -> table.' + p + '();').join('\n')}
+            default -> null;
+        };
     }
 ${keyMethod}${treeMethod}}
 `;

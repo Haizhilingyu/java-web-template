@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.Logininfor;
 import com.jezetek.modules.system.model.LogininforTable;
 import org.babyfish.jimmer.Specification;
@@ -37,6 +39,7 @@ public class LogininforRepository extends AbstractJavaRepository<Logininfor, Lon
                         table.username().like(keyword),
                         table.ip().like(keyword),
                         table.message().like(keyword)))
+                .orderBy(PageOrders.translate(pageable.getSort(), LogininforRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -54,5 +57,18 @@ public class LogininforRepository extends AbstractJavaRepository<Logininfor, Lon
         return sql
                 .createDelete(table)
                 .execute();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "username" -> table.username();
+            case "ip" -> table.ip();
+            case "message" -> table.message();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

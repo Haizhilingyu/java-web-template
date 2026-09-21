@@ -1,5 +1,7 @@
 package com.jezetek.modules.job.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.job.model.SysJob;
 import com.jezetek.modules.job.model.SysJobTable;
 import org.babyfish.jimmer.Specification;
@@ -36,6 +38,7 @@ public class JobRepository extends AbstractJavaRepository<SysJob, Long> {
         return sql
                 .createQuery(table)
                 .where(specification)
+                .orderBy(PageOrders.translate(pageable.getSort(), JobRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -53,5 +56,21 @@ public class JobRepository extends AbstractJavaRepository<SysJob, Long> {
                 .where(table.status().eq(status))
                 .select(table)
                 .execute();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "name" -> table.name();
+            case "cron" -> table.cron();
+            case "handler" -> table.handler();
+            case "param" -> table.param();
+            case "status" -> table.status();
+            case "memo" -> table.memo();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

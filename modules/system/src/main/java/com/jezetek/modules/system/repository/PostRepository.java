@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.Post;
 import com.jezetek.modules.system.model.PostTable;
 import org.babyfish.jimmer.Specification;
@@ -34,11 +36,26 @@ public class PostRepository extends AbstractJavaRepository<Post, Long> {
         return sql
                 .createQuery(table)
                 .where(specification)
+                .orderBy(PageOrders.translate(pageable.getSort(), PostRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         SpringPageFactory.getInstance()
                 );
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "code" -> table.code();
+            case "name" -> table.name();
+            case "sortOrder" -> table.sortOrder();
+            case "enabled" -> table.enabled();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

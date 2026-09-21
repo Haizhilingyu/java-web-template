@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.Config;
 import com.jezetek.modules.system.model.ConfigTable;
 import org.babyfish.jimmer.Specification;
@@ -36,6 +38,7 @@ public class ConfigRepository extends AbstractJavaRepository<Config, Long> {
         return sql
                 .createQuery(table)
                 .where(specification)
+                .orderBy(PageOrders.translate(pageable.getSort(), ConfigRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -53,5 +56,19 @@ public class ConfigRepository extends AbstractJavaRepository<Config, Long> {
                 .where(table.configKey().eq(configKey))
                 .select(table.fetch(fetcher))
                 .fetchOptional();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "configKey" -> table.configKey();
+            case "configName" -> table.configName();
+            case "configValue" -> table.configValue();
+            case "remark" -> table.remark();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

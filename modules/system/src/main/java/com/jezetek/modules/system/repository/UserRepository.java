@@ -1,8 +1,10 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
 import com.jezetek.modules.system.model.User;
 import com.jezetek.modules.system.model.UserTable;
 import org.babyfish.jimmer.Specification;
+import org.babyfish.jimmer.sql.ast.Expression;
 import org.babyfish.jimmer.spring.repo.support.AbstractJavaRepository;
 import org.babyfish.jimmer.spring.repository.support.SpringPageFactory;
 import org.babyfish.jimmer.sql.JSqlClient;
@@ -47,12 +49,26 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
                 .where(treeDeptIds == null ? null : table.deptId().in(treeDeptIds))
                 .where(scopedDeptIds == null ? null : table.deptId().in(scopedDeptIds))
                 .where(selfUserId == null ? null : table.id().eq(selfUserId))
+                .orderBy(PageOrders.translate(pageable.getSort(), UserRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         SpringPageFactory.getInstance()
                 );
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "username" -> table.username();
+            case "nickname" -> table.nickname();
+            case "enabled" -> table.enabled();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.DictData;
 import com.jezetek.modules.system.model.DictDataFetcher;
 import com.jezetek.modules.system.model.DictDataTable;
@@ -41,6 +43,7 @@ public class DictDataRepository extends AbstractJavaRepository<DictData, Long> {
                 .createQuery(table)
                 .where(specification)
                 .where(dictTypeId == null ? null : table.dictTypeId().eq(dictTypeId))
+                .orderBy(PageOrders.translate(pageable.getSort(), DictDataRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -74,5 +77,19 @@ public class DictDataRepository extends AbstractJavaRepository<DictData, Long> {
                 .select(table.id())
                 .execute()
                 .isEmpty();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "label" -> table.label();
+            case "value" -> table.value();
+            case "sortOrder" -> table.sortOrder();
+            case "enabled" -> table.enabled();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

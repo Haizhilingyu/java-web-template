@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.OperLog;
 import com.jezetek.modules.system.model.OperLogTable;
 import org.babyfish.jimmer.spring.repo.support.AbstractJavaRepository;
@@ -37,6 +39,7 @@ public class OperLogRepository extends AbstractJavaRepository<OperLog, Long> {
                         table.action().like(keyword),
                         table.operator().like(keyword),
                         table.uri().like(keyword)))
+                .orderBy(PageOrders.translate(pageable.getSort(), OperLogRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -52,5 +55,21 @@ public class OperLogRepository extends AbstractJavaRepository<OperLog, Long> {
         sql
                 .createDelete(table)
                 .execute();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "module" -> table.module();
+            case "action" -> table.action();
+            case "operator" -> table.operator();
+            case "uri" -> table.uri();
+            case "costMs" -> table.costMs();
+            case "success" -> table.success();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

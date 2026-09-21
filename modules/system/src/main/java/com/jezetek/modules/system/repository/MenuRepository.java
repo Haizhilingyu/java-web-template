@@ -1,5 +1,7 @@
 package com.jezetek.modules.system.repository;
 
+import com.jezetek.core.runtime.repository.PageOrders;
+import org.babyfish.jimmer.sql.ast.Expression;
 import com.jezetek.modules.system.model.Menu;
 import com.jezetek.modules.system.model.MenuTable;
 import org.babyfish.jimmer.Specification;
@@ -37,6 +39,7 @@ public class MenuRepository extends AbstractJavaRepository<Menu, Long> {
         return sql
                 .createQuery(table)
                 .where(specification)
+                .orderBy(PageOrders.translate(pageable.getSort(), MenuRepository::sortable))
                 .select(table.fetch(fetcher))
                 .fetchPage(
                         pageable.getPageNumber(),
@@ -85,5 +88,23 @@ public class MenuRepository extends AbstractJavaRepository<Menu, Long> {
                 .orderBy(table.sortOrder().asc(), table.id().asc())
                 .select(table.fetch(fetcher))
                 .execute();
+    }
+
+    /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
+    private static Expression<?> sortable(String property) {
+        return switch (property) {
+            case "id" -> table.id();
+            case "name" -> table.name();
+            case "type" -> table.type();
+            case "path" -> table.path();
+            case "component" -> table.component();
+            case "perms" -> table.perms();
+            case "icon" -> table.icon();
+            case "visible" -> table.visible();
+            case "sortOrder" -> table.sortOrder();
+            case "createdTime" -> table.createdTime();
+            case "modifiedTime" -> table.modifiedTime();
+            default -> null;
+        };
     }
 }

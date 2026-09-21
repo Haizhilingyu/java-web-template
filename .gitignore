@@ -35,3 +35,6 @@ build/
 /web/node
 /web/node_modules
 /web/static
+
+# ZCode 会话本地文件
+.zcode/
