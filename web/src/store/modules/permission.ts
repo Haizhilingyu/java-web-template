@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import type { RouteRecordRaw } from 'vue-router';
 
 import { fetchRouters } from '@/api/auth';
-import type { RouteItem } from '@/api/model/permissionModel';
+import type { RouteItem } from '@/api/auth';
 import router, { fixedRouterList, homepageRouterList } from '@/router';
 import { PAGE_NOT_FOUND_ROUTE } from '@/utils/route/constant';
 import { store } from '@/store';

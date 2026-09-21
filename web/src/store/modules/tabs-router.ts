@@ -5,7 +5,7 @@ import type { TRouterInfo, TTabRouterType } from '@/types/interface';
 
 const homeRoute: Array<TRouterInfo> = [
   {
-    path: '/dashboard/base',
+    path: '/',
     routeIdx: 0,
     title: { zh_CN: '仪表盘', en_US: 'Dashboard' },
     name: 'DashboardBase',

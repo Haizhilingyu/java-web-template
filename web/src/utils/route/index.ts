@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 
-import type { RouteItem } from '@/api/model/permissionModel';
+import type { RouteItem } from '@/api/auth';
 import {
   BLANK_LAYOUT,
   EXCEPTION_COMPONENT,
@@ -37,12 +37,14 @@ function asyncImportRoute(routes: RouteItem[] | undefined) {
     const { component, name } = item;
     const { children } = item;
 
-    if (component) {
-      const layoutFound = LayoutMap.get(component.toUpperCase());
+    // 后端下发的 component 恒为字符串(如 LAYOUT 或 /system/user/index)
+    const componentPath = typeof component === 'string' ? component : undefined;
+    if (componentPath) {
+      const layoutFound = LayoutMap.get(componentPath.toUpperCase());
       if (layoutFound) {
         item.component = layoutFound;
       } else {
-        item.component = dynamicImport(dynamicViewsModules, component);
+        item.component = dynamicImport(dynamicViewsModules, componentPath);
       }
     } else if (name) {
       item.component = PARENT_LAYOUT();
@@ -82,7 +84,8 @@ function dynamicImport(dynamicViewsModules: Record<string, () => Promise<Recorda
 // 将背景对象变成路由对象
 export function transformObjectToRoute<T = RouteItem>(routeList: RouteItem[]): T[] {
   routeList.forEach(async (route) => {
-    const component = route.component as string;
+    // 后端下发的 component 恒为字符串(如 LAYOUT 或 /system/user/index)
+    const component = typeof route.component === 'string' ? route.component : undefined;
 
     if (component) {
       if (component.toUpperCase() === 'LAYOUT') {

@@ -1,4 +1,16 @@
-import type { RouteItem } from '@/api/model/permissionModel';
+import type { Component } from 'vue';
+import type { RouteMeta } from 'vue-router';
+
+/** 动态路由条目(原 permissionModel，随模板遗留清理内联至此) */
+export interface RouteItem {
+  path: string;
+  name: string;
+  component?: Component | string;
+  components?: Component;
+  redirect?: string;
+  meta: RouteMeta;
+  children?: Array<RouteItem>;
+}
 
 /**
  * 认证接口直连封装(不走 jimmer 生成的客户端)：
