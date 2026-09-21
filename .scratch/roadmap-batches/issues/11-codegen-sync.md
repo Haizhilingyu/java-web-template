@@ -4,9 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 生成产物与现有 modules/system、modules/job 结构一致，复制进工程即可被 scanBasePackages 装配
-- [ ] 生成的 pom 含 jimmer-apt 执行级覆盖，与红线写法一致
-- [ ] 生成路径/权限点符合 `/api/v1/{code}` 与 `<code>:实体:动作` 约定
-- [ ] codegen/README.md 与实际产物一致；一个 commit
+- [x] 生成产物与现有 modules/system、modules/job 结构一致，复制进工程即可被 scanBasePackages 装配
+- [x] 生成的 pom 含 jimmer-apt 执行级覆盖，与红线写法一致
+- [x] 生成路径/权限点符合 `/api/v1/{code}` 与 `<code>:实体:动作` 约定
+- [x] codegen/README.md 与实际产物一致；一个 commit
+
+## Comments
+
+2026-09-21 完成。
+
+- 重构：删除旧"core 四子模块"生成器(gen/{entity,repository,runtime,service,sql,pom}.ts)，新增自包含 `gen/module.ts` 按模块骨架产出 13 个文件(pom/model/repository/service(ModuleProvider+DtoGeneration)/dto/schema.sql+data.sql)；schema.ts 的 ProjectDef 改模块化字段(moduleCode/moduleName)，EntityDef 增 icon/label(中文菜单名与 @Log 动作名)；cli.ts 换新输出布局；schemas/rbac.ts 改为课程管理示例(教师/课程，含多对一/业务键/QBE)；README 重写为模块骨架说明+模块化红线清单。
+- 验证：`npm run typecheck` 零错误；`npm run gen:rbac` 生成 13 文件，抽查 pom(jimmer-apt 执行级覆盖 4 处)、CourseService(/api/v1/course/course+course:course:* 权限点+@Log 中文动作)、ModuleProvider(apiPrefixes /api/v1/course/**+菜单树)、schema.sql(FK 指向目标表 id) 均符合约定。
