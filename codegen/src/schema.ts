@@ -103,6 +103,10 @@ export interface EntityDef {
     /** 表名，如 sys_user(保留字需自行规避) */
     table: string;
     comment?: string;
+    /** 菜单图标名(tdesign icons)，默认 application */
+    icon?: string;
+    /** 中文显示名(菜单名/@Log 动作)，缺省用实体名 */
+    label?: string;
     /** 继承 BaseEntity(createdTime/modifiedTime)，默认 true */
     baseEntity?: boolean;
     /** 继承 TenantAware(多租户隔离)，默认 false */
@@ -114,19 +118,16 @@ export interface EntityDef {
 }
 
 export interface ProjectDef {
-    /** 生成代码的 java 包根，如 com.jezetek.core */
-    javaPackage: string;
-    /** Maven 坐标: 生成模块的 groupId/artifactId(version) 与根工程 */
+    /** 模块编码(小写)：决定包名 com.jezetek.modules.{code}、接口前缀 /api/v1/{code}、权限点 {code}:... */
+    moduleCode: string;
+    /** 模块显示名(中文)，用于 ModuleProvider 与菜单目录 */
+    moduleName: string;
+    /** Maven 坐标: 模块 groupId/version 与根工程(artifactId 即 moduleCode) */
     groupId: string;
-    artifactId: string;
     version: string;
     rootProject: { groupId: string; artifactId: string; version: string };
     jimmerVersion: string;
-    springBootVersion: string;
-    jacksonVersion: string;
     javaVersion: string;
-    /** 租户兜底配置项名(无 tenant 头时使用)，如 core.default-tenant */
-    defaultTenantProperty: string;
 }
 
 export interface Schema {
