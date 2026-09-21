@@ -1,8 +1,11 @@
 import type {Executor} from '../';
 import type {
+    AuthModels_ChangePasswordRequest, 
     AuthModels_GetInfoResponse, 
     AuthModels_LoginRequest, 
     AuthModels_LoginResult, 
+    AuthModels_NicknameRequest, 
+    AuthModels_ProfileResponse, 
     AuthModels_RouteVO
 } from '../model/static/';
 
@@ -18,6 +21,27 @@ import type {
 export class AuthController {
     
     constructor(private executor: Executor) {}
+    
+    /**
+     * 修改昵称：每次请求回库加载用户，无需作废会话
+     */
+    readonly changeNickname: (options: AuthControllerOptions['changeNickname']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/v1/auth/nickname';
+        return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<void>;
+    }
+    
+    /**
+     * 修改密码：校验旧密码后更新，成功即作废该用户全部会话(含当前)，
+     * 所有端需重新登录(ADR-0001)
+     */
+    readonly changePassword: (options: AuthControllerOptions['changePassword']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/v1/auth/password';
+        return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<void>;
+    }
     
     /**
      * 当前登录用户的基本信息 + 角色 + 权限标识集合(按钮级权限指令的数据源)
@@ -59,6 +83,16 @@ export class AuthController {
         let _uri = '/api/v1/auth/logout';
         return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
     }
+    
+    /**
+     * 个人中心资料：部门/角色/岗位名称
+     */
+    readonly profile: () => Promise<
+        AuthModels_ProfileResponse
+    > = async() => {
+        let _uri = '/api/v1/auth/profile';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<AuthModels_ProfileResponse>;
+    }
 }
 
 export type AuthControllerOptions = {
@@ -67,5 +101,12 @@ export type AuthControllerOptions = {
     }, 
     'getInfo': {}, 
     'getRouters': {}, 
-    'logout': {}
+    'logout': {}, 
+    'profile': {}, 
+    'changeNickname': {
+        readonly body: AuthModels_NicknameRequest
+    }, 
+    'changePassword': {
+        readonly body: AuthModels_ChangePasswordRequest
+    }
 }

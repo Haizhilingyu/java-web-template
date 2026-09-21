@@ -49,4 +49,31 @@ public final class AuthModels {
             @Nullable List<RouteVO> children
     ) {
     }
+
+    /** 个人中心资料：部门/角色/岗位只取名称 */
+    public record ProfileResponse(
+            long id,
+            String username,
+            @Nullable String nickname,
+            @Nullable String deptName,
+            List<String> roleNames,
+            List<String> postNames
+    ) {
+    }
+
+    public record NicknameRequest(
+            @jakarta.validation.constraints.NotBlank(message = "昵称不能为空")
+            @jakarta.validation.constraints.Size(max = 50, message = "昵称长度不能超过50")
+            String nickname
+    ) {
+    }
+
+    public record ChangePasswordRequest(
+            @jakarta.validation.constraints.NotBlank(message = "旧密码不能为空")
+            String oldPassword,
+            @jakarta.validation.constraints.NotBlank(message = "新密码不能为空")
+            @jakarta.validation.constraints.Size(min = 6, max = 100, message = "新密码长度必须在6~100之间")
+            String newPassword
+    ) {
+    }
 }

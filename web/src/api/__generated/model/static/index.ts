@@ -1,6 +1,9 @@
+export type {AuthModels_ChangePasswordRequest} from './AuthModels_ChangePasswordRequest';
 export type {AuthModels_GetInfoResponse} from './AuthModels_GetInfoResponse';
 export type {AuthModels_LoginRequest} from './AuthModels_LoginRequest';
 export type {AuthModels_LoginResult} from './AuthModels_LoginResult';
+export type {AuthModels_NicknameRequest} from './AuthModels_NicknameRequest';
+export type {AuthModels_ProfileResponse} from './AuthModels_ProfileResponse';
 export type {AuthModels_RouteMeta} from './AuthModels_RouteMeta';
 export type {AuthModels_RouteVO} from './AuthModels_RouteVO';
 export type {AuthModels_UserInfo} from './AuthModels_UserInfo';

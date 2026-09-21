@@ -4,13 +4,19 @@ import com.jezetek.core.runtime.security.LoginUser;
 import com.jezetek.core.runtime.security.SecurityUtils;
 import com.jezetek.core.runtime.security.SessionRegistry;
 import com.jezetek.core.runtime.security.TokenService;
+import com.jezetek.core.runtime.BusinessException;
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode;
+import com.jezetek.modules.system.model.Fetchers;
+import com.jezetek.modules.system.model.User;
+import com.jezetek.modules.system.model.UserDraft;
+import com.jezetek.modules.system.repository.UserRepository;
 import com.jezetek.modules.system.service.LoginLogWriter;
-import com.jezetek.modules.system.service.LogininforService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -28,7 +34,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/auth")
-public class AuthController {
+public class AuthController implements Fetchers {
 
     private final AuthenticationManager authenticationManager;
 
@@ -40,17 +46,25 @@ public class AuthController {
 
     private final MenuRouteService menuRouteService;
 
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
             SessionRegistry sessionRegistry,
             LoginLogWriter loginLogWriter,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
             MenuRouteService menuRouteService
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
         this.sessionRegistry = sessionRegistry;
         this.loginLogWriter = loginLogWriter;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.menuRouteService = menuRouteService;
     }
 
@@ -121,6 +135,67 @@ public class AuthController {
             );
             sessionRegistry.remove(payload.jti());
         }
+    }
+
+    /**
+     * 个人中心资料：部门/角色/岗位名称
+     */
+    @GetMapping("/profile")
+    public AuthModels.ProfileResponse profile() {
+        LoginUser current = requireLoginUser();
+        User user = userRepository.findById(
+                current.id(),
+                USER_FETCHER
+                        .username()
+                        .nickname()
+                        .dept(DEPT_FETCHER.name())
+                        .roles(ROLE_FETCHER.name())
+                        .posts(POST_FETCHER.name())
+        );
+        if (user == null) {
+            throw new IllegalStateException("用户不存在");
+        }
+        return new AuthModels.ProfileResponse(
+                user.id(),
+                user.username(),
+                user.nickname(),
+                user.dept() != null ? user.dept().name() : null,
+                user.roles().stream().map(com.jezetek.modules.system.model.Role::name).toList(),
+                user.posts().stream().map(com.jezetek.modules.system.model.Post::name).toList()
+        );
+    }
+
+    /**
+     * 修改昵称：每次请求回库加载用户，无需作废会话
+     */
+    @PutMapping("/nickname")
+    public void changeNickname(@Valid @RequestBody AuthModels.NicknameRequest request) {
+        LoginUser current = requireLoginUser();
+        User entity = UserDraft.$.produce(draft -> {
+            draft.setId(current.id());
+            draft.setNickname(request.nickname());
+        });
+        userRepository.saveCommand(entity).setMode(SaveMode.NON_IDEMPOTENT_UPSERT).execute();
+    }
+
+    /**
+     * 修改密码：校验旧密码后更新，成功即作废该用户全部会话(含当前)，
+     * 所有端需重新登录(ADR-0001)
+     */
+    @PutMapping("/password")
+    public void changePassword(@Valid @RequestBody AuthModels.ChangePasswordRequest request) {
+        LoginUser current = requireLoginUser();
+        User user = userRepository.findById(current.id(), USER_FETCHER.password());
+        if (user == null || user.password() == null
+                || !passwordEncoder.matches(request.oldPassword(), user.password())) {
+            throw new BusinessException("旧密码错误");
+        }
+        User entity = UserDraft.$.produce(draft -> {
+            draft.setId(current.id());
+            draft.setPassword(passwordEncoder.encode(request.newPassword()));
+        });
+        userRepository.saveCommand(entity).setMode(SaveMode.NON_IDEMPOTENT_UPSERT).execute();
+        sessionRegistry.removeByUser(current.id());
     }
 
     private static HttpServletRequest currentRequest() {
