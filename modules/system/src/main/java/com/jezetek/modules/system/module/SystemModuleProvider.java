@@ -39,7 +39,8 @@ public class SystemModuleProvider implements ModuleProvider {
                 "/api/v1/config/**",
                 "/api/v1/notice/**",
                 "/api/v1/logininfor/**",
-                "/api/v1/online/**"
+                "/api/v1/online/**",
+                "/api/v1/operlog/**"
         );
     }
 

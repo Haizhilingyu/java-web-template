@@ -31,7 +31,7 @@ public class OperLogAspect {
 
     private static final int MAX_TEXT_LENGTH = 2000;
 
-    private static final Pattern PASSWORD_MASK = Pattern.compile("(password=)[^,)]*");
+    private static final Pattern PASSWORD_MASK = Pattern.compile("(?i)(password\s*=\s*)[^,)]*");
 
     private final OperLogWriter operLogWriter;
 

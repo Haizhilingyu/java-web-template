@@ -77,12 +77,12 @@ public class RoleService implements Fetchers {
             if (input.getDescription() != null) {
                 draft.setDescription(input.getDescription());
             }
-            Integer dataScope = intField(input, "dataScope");
+            Integer dataScope = InputFields.intValue(RoleInput.class, input, "dataScope");
             draft.setDataScope(dataScope == null ? 1 : dataScope);
-            if (isProvided(input, "menuIds")) {
+            if (InputFields.isProvided(RoleInput.class, input, "menuIds")) {
                 draft.setMenuIds(input.getMenuIds());
             }
-            if (isProvided(input, "customDeptIds")) {
+            if (InputFields.isProvided(RoleInput.class, input, "customDeptIds")) {
                 draft.setCustomDeptIds(input.getCustomDeptIds());
             }
         });
@@ -90,32 +90,6 @@ public class RoleService implements Fetchers {
                 .saveCommand(entity)
                 .execute(DEFAULT_FETCHER)
                 .getModifiedEntity();
-    }
-
-    /**
-     * 读取 Input 的标量字段原始值(绕开"未提交即抛异常"的生成 getter)
-     */
-    private static Integer intField(RoleInput input, String field) {
-        try {
-            java.lang.reflect.Field f = RoleInput.class.getDeclaredField(field);
-            f.setAccessible(true);
-            return (Integer) f.get(input);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("RoleInput 缺少字段: " + field, e);
-        }
-    }
-
-    /**
-     * 判断 dto 集合属性是否被客户端提交(字段是否被 setter 写过)
-     */
-    private static boolean isProvided(RoleInput input, String field) {
-        try {
-            java.lang.reflect.Field f = RoleInput.class.getDeclaredField(field);
-            f.setAccessible(true);
-            return f.get(input) != null;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("RoleInput 缺少字段: " + field, e);
-        }
     }
 
     @Log(module = "角色管理", action = "删除角色")

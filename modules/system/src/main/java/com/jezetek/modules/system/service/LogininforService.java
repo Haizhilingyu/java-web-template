@@ -3,6 +3,7 @@ package com.jezetek.modules.system.service;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.Logininfor;
 import com.jezetek.modules.system.repository.LogininforRepository;
+import com.jezetek.core.runtime.log.Log;
 import org.babyfish.jimmer.client.FetchBy;
 import org.babyfish.jimmer.spring.model.SortUtils;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,7 @@ public class LogininforService implements Fetchers {
         );
     }
 
+    @Log(module = "登录日志", action = "清空登录日志")
     @PreAuthorize("@perm.has('system:log:clear')")
     @DeleteMapping("/clear")
     public void clear() {

@@ -58,6 +58,6 @@ class SessionRegistryTest {
         assertFalse(registry.contains("jti-b"));
         // 其他用户的会话不受影响
         assertTrue(registry.contains("jti-c"));
-        assertEquals(1, registry.all().size());
+        assertEquals(1, registry.snapshot().size());
     }
 }

@@ -3,6 +3,7 @@ package com.jezetek.modules.system.service;
 import com.jezetek.modules.system.model.Fetchers;
 import com.jezetek.modules.system.model.OperLog;
 import com.jezetek.modules.system.repository.OperLogRepository;
+import com.jezetek.core.runtime.log.Log;
 import org.babyfish.jimmer.client.FetchBy;
 import org.babyfish.jimmer.spring.model.SortUtils;
 import org.babyfish.jimmer.sql.fetcher.Fetcher;
@@ -46,6 +47,7 @@ public class OperLogService implements Fetchers {
     /**
      * 清空全部操作日志
      */
+    @Log(module = "操作日志", action = "清空操作日志")
     @PreAuthorize("@perm.has('system:log:clear')")
     @DeleteMapping("/clear")
     public void clear() {

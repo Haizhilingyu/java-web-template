@@ -150,10 +150,10 @@ public class UserService implements Fetchers {
             if (input.getDeptId() != null) {
                 draft.setDeptId(input.getDeptId());
             }
-            if (isProvided(input, "postIds")) {
+            if (InputFields.isProvided(UserInput.class, input, "postIds")) {
                 draft.setPostIds(input.getPostIds());
             }
-            if (isProvided(input, "roleIds")) {
+            if (InputFields.isProvided(UserInput.class, input, "roleIds")) {
                 draft.setRoleIds(input.getRoleIds());
             }
         });
@@ -161,21 +161,6 @@ public class UserService implements Fetchers {
                 .saveCommand(entity)
                 .execute(DEFAULT_FETCHER)
                 .getModifiedEntity();
-    }
-
-    /**
-     * 判断 dto 集合属性是否被客户端提交(字段是否被 setter 写过)，
-     * 绕开生成 getter 的懒初始化。字段名由本类内调用方写死，
-     * 与 User.dto 属性同步，编译期无法校验，有测试锁定语义
-     */
-    private static boolean isProvided(UserInput input, String field) {
-        try {
-            java.lang.reflect.Field f = UserInput.class.getDeclaredField(field);
-            f.setAccessible(true);
-            return f.get(input) != null;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("UserInput 缺少字段: " + field, e);
-        }
     }
 
     @Log(module = "用户管理", action = "删除用户")
