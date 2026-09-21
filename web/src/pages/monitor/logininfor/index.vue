@@ -6,6 +6,9 @@
           <t-button v-permission="'system:log:clear'" theme="danger" variant="outline" @click="clearVisible = true">
             清空日志
           </t-button>
+          <t-button v-permission="'system:log:export'" variant="outline" :loading="exporting" @click="onExport">
+            导出
+          </t-button>
         </div>
         <t-space break-line>
           <t-input v-model="query.keyword" placeholder="账号/IP/消息" clearable class="search-item" />
@@ -40,6 +43,7 @@
 
   import type { LogininforDto } from '@/api/__generated/model/dto';
   import { api } from '@/api/jimmer';
+  import { downloadFile } from '@/api/download';
 
   const columns: TableProps['columns'] = [
     { colKey: 'id', title: 'ID', width: 80 },
@@ -63,6 +67,18 @@
   const data = ref<LogininforRow[]>([]);
   const loading = ref(false);
   const clearVisible = ref(false);
+  const exporting = ref(false);
+
+  async function onExport() {
+    exporting.value = true;
+    try {
+      await downloadFile('/api/v1/logininfor/export', { keyword: query.keyword || undefined });
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      exporting.value = false;
+    }
+  }
 
   async function load() {
     loading.value = true;

@@ -157,7 +157,8 @@ public class SystemModuleProvider implements ModuleProvider {
                                         .sortOrder(1)
                                         .children(
                                                 button("查询操作日志", "system:log:list", 1),
-                                                button("清空操作日志", "system:log:clear", 2)
+                                                button("清空操作日志", "system:log:clear", 2),
+                                                button("导出操作日志", "system:log:export", 3)
                                         ),
                                 MenuNode.of("登录日志", MenuType.MENU)
                                         .path("/monitor/logininfor")
@@ -166,7 +167,8 @@ public class SystemModuleProvider implements ModuleProvider {
                                         .sortOrder(2)
                                         .children(
                                                 button("查询登录日志", "system:log:list", 1),
-                                                button("清空登录日志", "system:log:clear", 2)
+                                                button("清空登录日志", "system:log:clear", 2),
+                                                button("导出登录日志", "system:log:export", 3)
                                         ),
                                 MenuNode.of("在线用户", MenuType.MENU)
                                         .path("/monitor/online")

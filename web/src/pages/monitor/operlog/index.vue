@@ -6,6 +6,9 @@
           <t-button v-permission="'system:log:clear'" theme="danger" variant="outline" @click="clearVisible = true">
             清空日志
           </t-button>
+          <t-button v-permission="'system:log:export'" variant="outline" :loading="exporting" @click="onExport">
+            导出
+          </t-button>
         </div>
         <t-space break-line>
           <t-input v-model="query.keyword" placeholder="模块/动作/操作人/URI" clearable class="search-item" />
@@ -74,6 +77,7 @@
 
   import type { OperLogDto } from '@/api/__generated/model/dto';
   import { api } from '@/api/jimmer';
+  import { downloadFile } from '@/api/download';
 
   type OperLogRow = OperLogDto['OperLogService/DEFAULT_FETCHER'];
 
@@ -100,8 +104,20 @@
   const data = ref<OperLogRow[]>([]);
   const loading = ref(false);
   const clearVisible = ref(false);
+  const exporting = ref(false);
   const detailVisible = ref(false);
   const detail = ref<OperLogRow>();
+
+  async function onExport() {
+    exporting.value = true;
+    try {
+      await downloadFile('/api/v1/operlog/export', { keyword: query.keyword || undefined });
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      exporting.value = false;
+    }
+  }
 
   async function load() {
     loading.value = true;

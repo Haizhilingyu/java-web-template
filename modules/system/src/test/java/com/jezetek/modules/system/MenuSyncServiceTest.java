@@ -49,9 +49,9 @@ class MenuSyncServiceTest {
         assertEquals("F", userMenu.children().getFirst().type());
         assertEquals("system:user:list", userMenu.children().getFirst().perms());
 
-        // 声明共 2 目录 + 11 页面 + 40 按钮 = 53 个节点(工单03 用户导入导出各 +1)
+        // 声明共 2 目录 + 11 页面 + 42 按钮 = 55 个节点(工单03 用户导入导出各 +1，工单04 两日志导出各 +1)
         long total = count();
-        assertEquals(53, total);
+        assertEquals(55, total);
 
         // 再次同步不产生重复数据
         menuSyncService.sync();
