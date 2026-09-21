@@ -69,12 +69,33 @@ export interface UserProfile {
   perms: Array<string>;
 }
 
-export async function login(username: string, password: string): Promise<void> {
+export async function login(
+  username: string,
+  password: string,
+  captchaKey?: string,
+  captchaCode?: string,
+): Promise<void> {
   const result = await request<{ token: string }>('/api/v1/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({
+      username,
+      password,
+      captchaKey: captchaKey || undefined,
+      captchaCode: captchaCode || undefined,
+    }),
   });
   setToken(result.token);
+}
+
+/** 登录验证码(工单01)：enabled=false 时前端不渲染验证码框 */
+export interface CaptchaInfo {
+  enabled: boolean;
+  key?: string;
+  image?: string;
+}
+
+export async function fetchCaptcha(): Promise<CaptchaInfo> {
+  return request<CaptchaInfo>('/api/v1/auth/captcha');
 }
 
 export async function fetchUserInfo(): Promise<UserProfile> {

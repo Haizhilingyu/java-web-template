@@ -51,7 +51,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        // captcha 是登录页拉取的前置接口，与 login 一样免认证(工单01)
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/captcha").permitAll()
                         .requestMatchers(protectedPatterns.toArray(String[]::new)).authenticated()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().permitAll())

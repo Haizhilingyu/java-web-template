@@ -50,6 +50,8 @@ public class AuthController implements Fetchers {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final CaptchaService captchaService;
+
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
@@ -57,7 +59,8 @@ public class AuthController implements Fetchers {
             LoginLogWriter loginLogWriter,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            MenuRouteService menuRouteService
+            MenuRouteService menuRouteService,
+            CaptchaService captchaService
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
@@ -66,12 +69,31 @@ public class AuthController implements Fetchers {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.menuRouteService = menuRouteService;
+        this.captchaService = captchaService;
+    }
+
+    /**
+     * 登录验证码(工单01)：开关关只回 enabled=false，前端不渲染验证码框；
+     * 开关开时返回 key 与 Base64 图。免登录访问(SecurityConfig permitAll)
+     */
+    @GetMapping("/captcha")
+    public AuthModels.CaptchaResponse captcha() {
+        if (!captchaService.enabled()) {
+            return new AuthModels.CaptchaResponse(false, null, null);
+        }
+        CaptchaService.Challenge challenge = captchaService.generate();
+        return new AuthModels.CaptchaResponse(true, challenge.key(), challenge.image());
     }
 
     /** 认证成功签发 JWT 并登记会话(ADR-0001)；登录日志记录成功/失败 */
     @PostMapping("/login")
     public AuthModels.LoginResult login(@Valid @RequestBody AuthModels.LoginRequest request) {
         String ip = clientIp();
+        // 验证码开关开启时先验码(一次性)，错码记登录日志并拒绝(工单01)
+        if (captchaService.enabled() && !captchaService.verify(request.captchaKey(), request.captchaCode())) {
+            loginLogWriter.append(request.username(), ip, "登录失败：验证码错误");
+            throw new BusinessException("验证码错误或已过期");
+        }
         org.springframework.security.core.Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(

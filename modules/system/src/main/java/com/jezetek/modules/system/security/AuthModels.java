@@ -17,7 +17,21 @@ public final class AuthModels {
 
     public record LoginRequest(
             @jakarta.validation.constraints.NotBlank(message = "用户名不能为空") String username,
-            @jakarta.validation.constraints.NotBlank(message = "密码不能为空") String password) {
+            @jakarta.validation.constraints.NotBlank(message = "密码不能为空") String password,
+            // 验证码开关开启时必填(工单01)；关闭时前端不渲染也不提交
+            @Nullable String captchaKey,
+            @Nullable String captchaCode) {
+    }
+
+    /**
+     * 登录验证码(工单01)：开关关只回 enabled=false；
+     * 开关开时 key 用于提交，image 为 Base64 PNG 可直接进 img src
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record CaptchaResponse(
+            boolean enabled,
+            @Nullable String key,
+            @Nullable String image) {
     }
 
     /** 登录成功带 token，失败带 message(HTTP 401)，二者互斥 */

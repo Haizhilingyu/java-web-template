@@ -50,6 +50,12 @@
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
         </dependency>
+        <!-- 登录图形验证码：生成 PNG + Base64，答案存进程内一次性缓存 -->
+        <dependency>
+            <groupId>com.github.whvcse</groupId>
+            <artifactId>easy-captcha</artifactId>
+            <version>1.6.2</version>
+        </dependency>
         <!-- 单元测试(H2 内存库) -->
         <dependency>
             <groupId>com.h2database</groupId>

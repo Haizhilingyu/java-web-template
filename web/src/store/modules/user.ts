@@ -23,9 +23,19 @@ export const useUserStore = defineStore('user', {
     },
   },
   actions: {
-    /** 账号密码登录，成功后令牌由 api/auth 写入 localStorage */
-    async login(form: { username?: string; password?: string }) {
-      await loginApi(form.username ?? '', form.password ?? '');
+    /** 账号密码登录(验证码开关开启时附 captchaKey/captchaCode)，成功后令牌由 api/auth 写入 localStorage */
+    async login(form: {
+      username?: string;
+      password?: string;
+      captchaKey?: string;
+      captchaCode?: string;
+    }) {
+      await loginApi(
+        form.username ?? '',
+        form.password ?? '',
+        form.captchaKey,
+        form.captchaCode,
+      );
       this.token = getToken();
     },
     /** 拉取用户信息并缓存，已缓存时直接返回(路由守卫每次导航都会调用) */
