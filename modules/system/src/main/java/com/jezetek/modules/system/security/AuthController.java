@@ -52,6 +52,8 @@ public class AuthController implements Fetchers {
 
     private final CaptchaService captchaService;
 
+    private final LoginLockService loginLockService;
+
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
@@ -60,7 +62,8 @@ public class AuthController implements Fetchers {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             MenuRouteService menuRouteService,
-            CaptchaService captchaService
+            CaptchaService captchaService,
+            LoginLockService loginLockService
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
@@ -70,6 +73,7 @@ public class AuthController implements Fetchers {
         this.passwordEncoder = passwordEncoder;
         this.menuRouteService = menuRouteService;
         this.captchaService = captchaService;
+        this.loginLockService = loginLockService;
     }
 
     /**
@@ -89,10 +93,18 @@ public class AuthController implements Fetchers {
     @PostMapping("/login")
     public AuthModels.LoginResult login(@Valid @RequestBody AuthModels.LoginRequest request) {
         String ip = clientIp();
-        // 验证码开关开启时先验码(一次性)，错码记登录日志并拒绝(工单01)
+        // 验证码开关开启时先验码(一次性)，错码记登录日志并拒绝(工单01)。
+        // 验证码失败不计入密码错误计数(工单02)
         if (captchaService.enabled() && !captchaService.verify(request.captchaKey(), request.captchaCode())) {
             loginLogWriter.append(request.username(), ip, "登录失败：验证码错误");
             throw new BusinessException("验证码错误或已过期");
+        }
+        // 锁定期内直接拒绝，不再尝试认证(工单02)
+        Long remainingMinutes = loginLockService.remainingMinutes(request.username()).orElse(null);
+        if (remainingMinutes != null) {
+            loginLogWriter.append(request.username(), ip,
+                    "登录失败：账号已锁定，剩余约" + remainingMinutes + "分钟");
+            throw new LoginLockedException("密码连续错误过多，账号已锁定，请约" + remainingMinutes + "分钟后再试");
         }
         org.springframework.security.core.Authentication authentication;
         try {
@@ -103,9 +115,17 @@ public class AuthController implements Fetchers {
             loginLogWriter.append(request.username(), ip, "登录失败：账号已禁用");
             throw e;
         } catch (org.springframework.security.core.AuthenticationException e) {
+            // 只有"用户存在但密码错误"才计入连错(工单02)；用户名不存在不计
+            boolean userExists = userRepository
+                    .findByUsername(request.username(), USER_FETCHER.username())
+                    .isPresent();
+            if (userExists) {
+                loginLockService.recordFailure(request.username());
+            }
             loginLogWriter.append(request.username(), ip, "登录失败：用户名或密码错误");
             throw e;
         }
+        loginLockService.reset(request.username());
         LoginUserDetails details = (LoginUserDetails) authentication.getPrincipal();
         LoginUser loginUser = details.loginUser();
         String token = tokenService.create(

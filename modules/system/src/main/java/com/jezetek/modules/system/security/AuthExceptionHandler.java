@@ -21,6 +21,12 @@ public class AuthExceptionHandler {
         return build("用户名或密码错误");
     }
 
+    /** 锁定拒绝：文案含剩余锁定分钟(工单02) */
+    @ExceptionHandler(LoginLockedException.class)
+    public ResponseEntity<AuthModels.LoginResult> locked(LoginLockedException e) {
+        return build(e.getMessage());
+    }
+
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<AuthModels.LoginResult> disabled(AuthenticationException e) {
         return build("账号已禁用");

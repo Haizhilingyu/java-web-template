@@ -97,3 +97,8 @@ core:
   security:
     secret-key: java-web-template-demo-secret-key-change-me-32B
     expire-hours: 24
+    # 密码连错锁定(工单02)：连错 5 次锁 10 分钟，进程内计数
+    login-protection:
+      enabled: true
+      max-attempts: 5
+      lock-minutes: 10

@@ -22,3 +22,8 @@ core:
   security:
     secret-key: system-module-test-secret-key-0123456789abcdef
     expire-hours: 1
+    login-protection:
+      # 连错锁定默认关：Caffeine 计数不随 @Transactional 回滚，
+      # 各用例的错误登录会跨类累积误锁 admin；锁定行为由
+      # LoginLockoutTest 以 properties 覆盖单独开上下文验证
+      enabled: false

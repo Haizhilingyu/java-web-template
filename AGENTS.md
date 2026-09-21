@@ -70,9 +70,11 @@ curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: applicati
 
 ## 安全要点
 
-- SecurityConfig permitAll 仅 `/auth/login`、静态资源、swagger、h2-console；其余 authenticated + `@EnableMethodSecurity`；401/403 统一 JSON
+- SecurityConfig permitAll 仅 `/auth/login`、`/auth/captcha`（工单01 验证码接口，登录页免认证拉取）、静态资源、swagger、h2-console；其余 authenticated + `@EnableMethodSecurity`；401/403 统一 JSON
 - 权限判断走 `@PreAuthorize("@perm.has('模块:实体:动作')")`；ADMIN 角色 perms `*:*:*` 在 PermissionChecker 直通；测试里用 `TestLogin`（合成 LoginUser，不走 UserDetails）注入权限
 - 登录请求不带 tenant 头：TenantFilter 在无请求上下文/空租户时**不加过滤条件**（启动同步依赖此行为）；查询当前用户务必经 `SecurityUtils`
+- **登录验证码（工单01）**：开关在 `sys_config` 的 `captchaEnabled`（种子默认 false），登录链路每次直读库——参数页改后即时生效不发版；答案存进程内一次性 Caffeine（key=uuid，TTL 2 分钟，校验即删防重放），重启即失效；开关关时 login 完全不校验验证码（curl 冒烟不受影响）
+- **密码连错锁定（工单02）**：进程内 Caffeine 计数（key=username），连错 5 次锁 10 分钟（`core.security.login-protection.*` 可配）；只有"用户存在但密码错误"才计数，用户名不存在/验证码错误/账号禁用均不计；成功登录清零；锁定自最后一次失败起算到期自动解锁。**TestLogin 不受影响**：它直接构造 SecurityContext 注入权限，不经过 login 端点与计数器；测试上下文默认 `enabled: false`（Caffeine 不随 @Transactional 回滚，跨用例累积会误锁 admin），锁定行为由 LoginLockoutTest 以 properties 覆盖单独开上下文验证
 
 ## 已知坑
 

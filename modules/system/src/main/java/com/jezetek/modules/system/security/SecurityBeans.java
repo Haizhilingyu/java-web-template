@@ -1,5 +1,6 @@
 package com.jezetek.modules.system.security;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * JWT 无状态会话由 core 的 SecurityConfig 负责，这里只提供登录校验能力
  */
 @Configuration
+@EnableConfigurationProperties(LoginProtectionProperties.class)
 public class SecurityBeans {
 
     @Bean
