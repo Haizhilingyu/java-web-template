@@ -38,6 +38,7 @@ public class SystemModuleProvider implements ModuleProvider {
                 "/api/v1/dict/**",
                 "/api/v1/config/**",
                 "/api/v1/notice/**",
+                "/api/v1/home/**",
                 "/api/v1/logininfor/**",
                 "/api/v1/online/**",
                 "/api/v1/operlog/**"
@@ -64,7 +65,8 @@ public class SystemModuleProvider implements ModuleProvider {
                                                 button("编辑用户", "system:user:edit", 3),
                                                 button("删除用户", "system:user:delete", 4),
                                                 button("导出用户", "system:user:export", 5),
-                                                button("导入用户", "system:user:import", 6)
+                                                button("导入用户", "system:user:import", 6),
+                                                button("重置密码", "system:user:resetPwd", 7)
                                         ),
                                 MenuNode.of("角色管理", MenuType.MENU)
                                         .path("/system/role")

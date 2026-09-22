@@ -44,10 +44,18 @@ public class UserService implements Fetchers {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, DeptRepository deptRepository, PasswordEncoder passwordEncoder) {
+    private final com.jezetek.modules.system.security.PasswordManager passwordManager;
+
+    public UserService(
+            UserRepository userRepository,
+            DeptRepository deptRepository,
+            PasswordEncoder passwordEncoder,
+            com.jezetek.modules.system.security.PasswordManager passwordManager
+    ) {
         this.userRepository = userRepository;
         this.deptRepository = deptRepository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordManager = passwordManager;
     }
 
     @PreAuthorize("@perm.has('system:user:list')")
@@ -171,12 +179,31 @@ public class UserService implements Fetchers {
     }
 
     /**
+     * 管理员重置密码(工单05)：无需旧密码，按 system:user:resetPwd 授权；
+     * 落库+作废目标用户全部会话走 PasswordManager 共用通道(与改密同语义)
+     */
+    @Log(module = "用户管理", action = "重置密码")
+    @PreAuthorize("@perm.has('system:user:resetPwd')")
+    @PutMapping("/{id}/password")
+    public void resetPassword(
+            @PathVariable("id") long id,
+            @Valid @RequestBody com.jezetek.modules.system.security.AuthModels.ResetPasswordRequest request
+    ) {
+        User user = userRepository.findById(id, USER_FETCHER.username());
+        if (user == null) {
+            throw new com.jezetek.core.runtime.BusinessException("用户不存在");
+        }
+        passwordManager.updatePasswordAndRevokeSessions(id, passwordEncoder.encode(request.newPassword()));
+    }
+
+    /**
      * 默认抓取形状：User 全部标量属性(不含 tenant)
      * + 角色/部门/岗位的全部标量属性(不含 tenant)
      */
     private static final Fetcher<User> DEFAULT_FETCHER =
             USER_FETCHER
                     .allScalarFields()
+                    .avatar(false)
                     .tenant(false)
                     .roles(
                             ROLE_FETCHER

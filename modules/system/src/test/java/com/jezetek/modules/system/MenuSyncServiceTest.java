@@ -45,13 +45,13 @@ class MenuSyncServiceTest {
         Menu userMenu = root.children().getFirst();
         assertEquals("/system/user", userMenu.path());
         assertEquals("/system/user/index", userMenu.component());
-        assertEquals(6, userMenu.children().size());
+        assertEquals(7, userMenu.children().size());
         assertEquals("F", userMenu.children().getFirst().type());
         assertEquals("system:user:list", userMenu.children().getFirst().perms());
 
-        // 声明共 2 目录 + 11 页面 + 42 按钮 = 55 个节点(工单03 用户导入导出各 +1，工单04 两日志导出各 +1)
+        // 声明共 2 目录 + 11 页面 + 43 按钮 = 56 个节点(工单03 导入导出各+1、工单04 两日志导出各+1、工单05 重置密码+1)
         long total = count();
-        assertEquals(55, total);
+        assertEquals(56, total);
 
         // 再次同步不产生重复数据
         menuSyncService.sync();

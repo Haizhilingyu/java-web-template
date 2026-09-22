@@ -69,6 +69,7 @@
             <template #op="{ row }">
               <t-space>
                 <t-link theme="primary" v-permission="'system:user:edit'" @click="openForm(row)"> 编辑 </t-link>
+                <t-link theme="warning" v-permission="'system:user:resetPwd'" @click="openReset(row)"> 重置密码 </t-link>
                 <t-link theme="danger" v-permission="'system:user:delete'" @click="confirmDelete(row)"> 删除 </t-link>
               </t-space>
             </template>
@@ -124,6 +125,25 @@
       @confirm="doDelete"
     />
 
+    <!-- 重置密码(工单05)：管理员输入新密码，重置后目标用户全部会话作废 -->
+    <t-dialog
+      v-model:visible="resetVisible"
+      :header="`重置密码：${resetTarget?.username ?? ''}`"
+      :confirm-btn="{ content: '确认重置', loading: resetting }"
+      width="420px"
+      @confirm="doReset"
+      @closed="resetFormInstance?.reset()"
+    >
+      <t-alert theme="warning" style="margin-bottom: 12px">
+        <template #message>重置后该用户所有登录会话将立即失效，需用新密码重新登录</template>
+      </t-alert>
+      <t-form ref="resetFormInstance" :data="resetForm" :rules="resetRules" label-width="80px" @submit.prevent>
+        <t-form-item label="新密码" name="newPassword">
+          <t-input v-model="resetForm.newPassword" type="password" clearable placeholder="6~100 位" />
+        </t-form-item>
+      </t-form>
+    </t-dialog>
+
     <!-- 导入弹窗：下载模板 + 选择文件 + 结果回显(工单03) -->
     <t-dialog
       v-model:visible="importVisible"
@@ -168,6 +188,7 @@
   import type { UserInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
   import { downloadFile, type ImportResult, uploadForJson } from '@/api/download';
+  import { resetUserPassword } from '@/api/extra';
 
   type UserRow = UserDto['UserService/DEFAULT_FETCHER'];
   type DeptNode = DeptDto['DeptService/TREE_FETCHER'];
@@ -186,7 +207,7 @@
     { colKey: 'roles', title: '角色' },
     { colKey: 'posts', title: '岗位' },
     { colKey: 'createdTime', title: '创建时间', width: 170 },
-    { colKey: 'op', title: '操作', width: 110 },
+    { colKey: 'op', title: '操作', width: 180 },
   ];
 
   const query = reactive({
@@ -381,6 +402,45 @@
   function confirmDelete(row: UserRow) {
     deleteTarget.value = row;
     deleteVisible.value = true;
+  }
+
+  // ------- 重置密码(工单05) -------
+  const resetVisible = ref(false);
+  const resetting = ref(false);
+  const resetTarget = ref<UserRow>();
+  const resetFormInstance = ref<FormInstanceFunctions>();
+  const resetForm = reactive({ newPassword: '' });
+  const resetRules: FormRules = {
+    newPassword: [
+      { required: true, message: '新密码不能为空', type: 'error' },
+      { min: 6, max: 100, message: '新密码长度必须在6~100之间', type: 'error' },
+    ],
+  };
+
+  function openReset(row: UserRow) {
+    resetTarget.value = row;
+    resetForm.newPassword = '';
+    resetVisible.value = true;
+  }
+
+  async function doReset() {
+    if (!resetTarget.value) {
+      return;
+    }
+    const valid = await resetFormInstance.value?.validate();
+    if (valid !== true) {
+      return;
+    }
+    resetting.value = true;
+    try {
+      await resetUserPassword(resetTarget.value.id, resetForm.newPassword);
+      MessagePlugin.success('密码已重置，该用户的全部会话已作废');
+      resetVisible.value = false;
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      resetting.value = false;
+    }
   }
 
   // ------- 导入导出(工单03) -------

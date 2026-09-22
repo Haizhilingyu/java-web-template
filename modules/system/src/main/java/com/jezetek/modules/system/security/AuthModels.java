@@ -90,4 +90,12 @@ public final class AuthModels {
             String newPassword
     ) {
     }
+
+    /** 管理员重置密码请求(工单05)：无需旧密码，按 system:user:resetPwd 授权 */
+    public record ResetPasswordRequest(
+            @jakarta.validation.constraints.NotBlank(message = "新密码不能为空")
+            @jakarta.validation.constraints.Size(min = 6, max = 100, message = "新密码长度必须在6~100之间")
+            String newPassword
+    ) {
+    }
 }

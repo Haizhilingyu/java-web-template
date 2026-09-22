@@ -22,6 +22,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 登录/登出/用户信息/动态路由。除 login 外均要求携带有效 JWT
@@ -54,6 +55,8 @@ public class AuthController implements Fetchers {
 
     private final LoginLockService loginLockService;
 
+    private final PasswordManager passwordManager;
+
     public AuthController(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
@@ -63,7 +66,8 @@ public class AuthController implements Fetchers {
             PasswordEncoder passwordEncoder,
             MenuRouteService menuRouteService,
             CaptchaService captchaService,
-            LoginLockService loginLockService
+            LoginLockService loginLockService,
+            PasswordManager passwordManager
     ) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
@@ -74,6 +78,7 @@ public class AuthController implements Fetchers {
         this.menuRouteService = menuRouteService;
         this.captchaService = captchaService;
         this.loginLockService = loginLockService;
+        this.passwordManager = passwordManager;
     }
 
     /**
@@ -222,7 +227,7 @@ public class AuthController implements Fetchers {
 
     /**
      * 修改密码：校验旧密码后更新，成功即作废该用户全部会话(含当前)，
-     * 所有端需重新登录(ADR-0001)
+     * 所有端需重新登录(ADR-0001)；落库+作废走 PasswordManager 共用通道
      */
     @PutMapping("/password")
     public void changePassword(@Valid @RequestBody AuthModels.ChangePasswordRequest request) {
@@ -232,13 +237,87 @@ public class AuthController implements Fetchers {
                 || !passwordEncoder.matches(request.oldPassword(), user.password())) {
             throw new BusinessException("旧密码错误");
         }
+        passwordManager.updatePasswordAndRevokeSessions(
+                current.id(), passwordEncoder.encode(request.newPassword()));
+    }
+
+    /**
+     * 上传当前用户头像(工单07)：multipart ≤2MB，扩展名白名单 png/jpg/jpeg/gif。
+     * 内联实现不抽通用文件服务；签名不带 multipart 类型(见类注释)
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/avatar")
+    public void uploadAvatar() throws java.io.IOException, jakarta.servlet.ServletException {
+        LoginUser current = requireLoginUser();
+        org.springframework.web.multipart.MultipartFile file = currentMultipartFile();
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("请选择头像图片");
+        }
+        if (file.getSize() > MAX_AVATAR_BYTES) {
+            throw new BusinessException("头像大小不能超过2MB");
+        }
+        String filename = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+        int dot = filename.lastIndexOf('.');
+        String ext = dot < 0 ? "" : filename.substring(dot + 1).toLowerCase();
+        if (!Set.of("png", "jpg", "jpeg", "gif").contains(ext)) {
+            throw new BusinessException("仅支持 png/jpg/jpeg/gif 图片");
+        }
+        byte[] bytes = file.getBytes();
         User entity = UserDraft.$.produce(draft -> {
             draft.setId(current.id());
-            draft.setPassword(passwordEncoder.encode(request.newPassword()));
+            draft.setAvatar(bytes);
         });
-        userRepository.saveCommand(entity).setMode(SaveMode.NON_IDEMPOTENT_UPSERT).execute();
-        sessionRegistry.removeByUser(current.id());
+        userRepository.saveCommand(entity)
+                .setMode(SaveMode.NON_IDEMPOTENT_UPSERT)
+                .execute();
     }
+
+    /**
+     * 读取当前用户头像(工单07)：authenticated 流式返回(JWT 在 header，
+     * 前端 fetch blob → objectURL 展示)；无头像返回 404
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/avatar")
+    public void avatar() throws java.io.IOException {
+        LoginUser current = requireLoginUser();
+        User user = userRepository.findById(current.id(), USER_FETCHER.avatar());
+        jakarta.servlet.http.HttpServletResponse response = ((ServletRequestAttributes)
+                RequestContextHolder.getRequestAttributes()).getResponse();
+        if (response == null) {
+            throw new IllegalStateException("无当前响应上下文");
+        }
+        if (user == null || user.avatar() == null) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        byte[] bytes = user.avatar();
+        response.setContentType(detectImageContentType(bytes));
+        response.setContentLength(bytes.length);
+        response.getOutputStream().write(bytes);
+    }
+
+    /** 魔数识别图片类型，兜底 octet-stream */
+    private static String detectImageContentType(byte[] bytes) {
+        if (bytes.length >= 8 && (bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P') {
+            return "image/png";
+        }
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) {
+            return "image/jpeg";
+        }
+        if (bytes.length >= 6 && bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F') {
+            return "image/gif";
+        }
+        return "application/octet-stream";
+    }
+
+    /**
+     * 从当前请求取 multipart 文件：签名不出现 multipart 类型(见类注释)。
+     * Spring 包装(MockMvc)优先，生产回退 Servlet Part(见 PartMultipartFile)
+     */
+    private static org.springframework.web.multipart.MultipartFile currentMultipartFile()
+            throws java.io.IOException, jakarta.servlet.ServletException {
+        return PartMultipartFile.fromRequest(currentRequest(), "file");
+    }
+
+    private static final int MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
     private static HttpServletRequest currentRequest() {
         return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
