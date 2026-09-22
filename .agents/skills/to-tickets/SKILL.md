@@ -61,6 +61,16 @@ Publish the approved tickets. **How** depends on the tracker `/setup-matt-pocock
 
 - **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
 - **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **GitLab（含离线内网自建实例）** → 与 GitHub 同款流程，用 `glab` 代替 `gh`：依赖顺序逐张 `glab issue create --title "..." --description "..."`（多行描述用 heredoc），让阻塞边引用真实编号。原生阻塞关系用 `/blocked_by` 快捷动作：`glab issue note <child> --message "/blocked_by #<blocker>"`（Premium 功能；免费版在描述顶部写 `Blocked by: #<n>` 行）。打标：`glab issue update <n> --label ready-for-agent`。
+
+#### GitLab 离线内网环境准备（一次性）
+
+1. 安装 `glab`：单二进制，离线拷贝进 PATH 即可，全程无需外网。
+2. 认证用 PAT（内网无法走浏览器 OAuth）：
+   `export GITLAB_HOST=<内网GitLab域名或IP:端口>`、`export GLAB_TOKEN=<个人访问令牌, scope: api>`
+   （或 `glab auth login --hostname <host> --token <token>`）。
+3. 自签证书：`glab config set --host <host> tls_skip_verify true`。
+4. 仓库归属由 `git remote -v` 自动推断——remote 指向内网 GitLab 即可；所有命令只访问内网 GitLab，不出外网。
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 

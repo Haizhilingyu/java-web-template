@@ -53,6 +53,27 @@ The maintainer invokes `/triage` and describes what they want in natural languag
 - "Move #42 to ready-for-agent"
 - "What's ready for agents to pick up?"
 
+## GitLab (glab) operations（含离线内网自建实例）
+
+issue tracker 为 GitLab 时用 `glab`，命令形态与 `gh` 一一对应（GitLab 把评论叫 note，用 `--message` 代替 `--body`）：
+
+- 查询待分诊：`glab issue list -F json`（配合 `--label` 过滤）
+- 读工单：`glab issue view <n> --comments`（`-F json` 机器可读）
+- 评论/贴 agent brief：`glab issue note <n> --message "..."`
+- 打标/去标：`glab issue update <n> --label "..."` / `--unlabel "..."`
+- 关闭：先 `glab issue note <n> --message "<说明>"` 再 `glab issue close <n>`（close 不带评论参数）
+- MR 在范围内时：`glab mr list -F json` / `glab mr view` / `glab mr note`（外部 MR = 作者非项目成员）
+- 裸 `#<n>` 无歧义：GitLab 的 issue 与 MR 编号空间独立
+
+#### GitLab 离线内网环境准备（一次性）
+
+1. 安装 `glab`：单二进制，离线拷贝进 PATH 即可，全程无需外网。
+2. 认证用 PAT（内网无法走浏览器 OAuth）：
+   `export GITLAB_HOST=<内网GitLab域名或IP:端口>`、`export GLAB_TOKEN=<个人访问令牌, scope: api>`
+   （或 `glab auth login --hostname <host> --token <token>`）。
+3. 自签证书：`glab config set --host <host> tls_skip_verify true`。
+4. 仓库归属由 `git remote -v` 自动推断——remote 指向内网 GitLab 即可；所有命令只访问内网 GitLab，不出外网。
+
 ## Show what needs attention
 
 Query the issue tracker and present three buckets, oldest first:

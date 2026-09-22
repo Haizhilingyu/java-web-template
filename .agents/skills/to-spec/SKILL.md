@@ -18,6 +18,8 @@ Check with the user that these seams match their expectations.
 
 3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
 
+   **GitLab（含离线内网自建实例）**：`glab issue create --title "<spec 标题>" --description "$(cat spec.md)"`（多行描述用 heredoc/文件传入），然后 `glab issue update <n> --label ready-for-agent`。环境准备见 to-tickets 技能的「GitLab 离线内网环境准备」。
+
 <spec-template>
 
 ## Problem Statement

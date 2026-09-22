@@ -24,6 +24,15 @@ The map is an **index**, not a store. It lists the decisions made and points at 
 
 **Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The issue tracker should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`. Consult the tracker doc's "Wayfinding operations" section for how _this_ repo expresses them. If no tracker has been provided, default to the local-markdown tracker.
 
+**GitLab（含离线内网自建实例，glab CLI）**：
+- **Map**: 打了 `wayfinder:map` 标签的单个 issue：`glab issue create --label wayfinder:map --title "..." --description "..."`。
+- **Child ticket**: 描述顶部带 `Part of #<map>`，标签 `wayfinder:<type>`（research/prototype/grilling/task）：`glab issue create --label "wayfinder:task"`。
+- **Blocking**: 原生阻塞链接用快捷动作 `glab issue note <child> --message "/blocked_by #<blocker>"`（Premium/Ultimate；免费版在描述顶部写 `Blocked by: #<n>` 行）。
+- **Claim**: `glab issue update <n> --assignee @me`（会话首次写操作）。
+- **Resolve**: `glab issue note <n> --message "<答案>"` → `glab issue close <n>` → 把上下文指针追加进 map 的 Decisions-so-far。
+- **Frontier**: `glab issue list -F json` 取 map 的开放 children，剔除有未关闭阻塞者或已被认领者；map 顺序在前者优先。
+- 环境准备见 to-tickets 技能的「GitLab 离线内网环境准备」（PAT 认证、GITLAB_HOST/GLAB_TOKEN、自签证书）。
+
 ### The map body
 
 The whole map at low resolution, loaded once per session. Open tickets are **not** listed: they are open child issues, found by query.
