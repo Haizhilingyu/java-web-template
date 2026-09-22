@@ -2,6 +2,18 @@
   <t-row :gutter="[16, 16]">
     <t-col :span="5">
       <t-card :bordered="false" title="基本资料">
+        <!-- 头像(工单07)：JWT 在 header，fetch blob → objectURL 展示，上传 ≤2MB 图片 -->
+        <div class="avatar-section">
+          <img v-if="avatarUrl" :src="avatarUrl" alt="头像" class="avatar-image" />
+          <div v-else class="avatar-placeholder">
+            <t-icon name="user" size="48px" />
+          </div>
+          <div class="avatar-actions">
+            <input ref="avatarInput" type="file" accept=".png,.jpg,.jpeg,.gif" style="display: none" @change="onAvatarChange" />
+            <t-button variant="outline" size="small" @click="avatarInput?.click()"> 更换头像 </t-button>
+            <span class="avatar-tip">支持 png/jpg/gif，≤2MB</span>
+          </div>
+        </div>
         <div class="profile-item">
           <span class="profile-label">用户名</span>
           <span>{{ profile?.username ?? '-' }}</span>
@@ -80,8 +92,46 @@
   import type { AuthModels_ProfileResponse } from '@/api/__generated/model/static';
   import { clearToken } from '@/api/auth';
   import { api } from '@/api/jimmer';
+  import { fetchAvatar, uploadAvatar } from '@/api/extra';
 
   const router = useRouter();
+
+  // 头像(工单07)
+  const avatarUrl = ref('');
+  const avatarInput = ref<HTMLInputElement>();
+
+  onMounted(() => {
+    fetchAvatar()
+      .then((info) => {
+        if (info.hasAvatar && info.url) {
+          avatarUrl.value = info.url;
+        }
+      })
+      .catch(() => {
+        // 无头像/接口异常保持占位图
+      });
+  });
+
+  async function onAvatarChange(event: Event) {
+    const files = (event.target as HTMLInputElement).files;
+    if (!files || !files.length) {
+      return;
+    }
+    try {
+      await uploadAvatar(files[0]);
+      MessagePlugin.success('头像已更新');
+      const info = await fetchAvatar();
+      if (info.hasAvatar && info.url) {
+        avatarUrl.value = info.url;
+      }
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      if (avatarInput.value) {
+        avatarInput.value.value = '';
+      }
+    }
+  }
 
   const profile = ref<AuthModels_ProfileResponse>();
   const loading = ref(false);
@@ -174,6 +224,42 @@
 </script>
 
 <style scoped lang="less">
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+
+    .avatar-image {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      color: var(--td-text-color-placeholder);
+      background: var(--td-bg-color-component);
+    }
+
+    .avatar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar-tip {
+      font-size: 12px;
+      color: var(--td-text-color-placeholder);
+    }
+  }
+
   .profile-item {
     display: flex;
     align-items: center;

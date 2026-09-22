@@ -42,7 +42,9 @@
             </template>
             <t-button class="header-user-btn" theme="default" variant="text">
               <template #icon>
-                <t-icon class="header-user-avatar" name="user-circle" />
+                <!-- 有头像显示图片(fetch blob → objectURL)，否则用默认图标(工单07) -->
+                <img v-if="avatarUrl" :src="avatarUrl" alt="头像" class="header-avatar-image" />
+                <t-icon v-else class="header-user-avatar" name="user-circle" />
               </template>
               <div class="header-user-account">{{ user.userInfo.name }}</div>
               <template #suffix><chevron-down-icon /></template>
@@ -61,8 +63,10 @@
 <script setup lang="ts">
 import { ChevronDownIcon, PoweroffIcon, SettingIcon, UserCircleIcon } from 'tdesign-icons-vue-next';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+
+import { fetchAvatar } from '@/api/extra';
 
 import LogoFull from '@/assets/assets-logo-full.svg?component';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
@@ -108,6 +112,18 @@ const { theme, layout, showLogo, menu, isFixed, isCompact } = defineProps({
 });
 
 const router = useRouter();
+
+// 头像(工单07)：JWT 在 header，fetch blob 转 objectURL 展示
+const avatarUrl = ref('');
+fetchAvatar()
+  .then((info) => {
+    if (info.hasAvatar && info.url) {
+      avatarUrl.value = info.url;
+    }
+  })
+  .catch(() => {
+    // 无头像/接口异常时保持默认图标
+  });
 const settingStore = useSettingStore();
 const user = useUserStore();
 
@@ -293,5 +309,13 @@ const navToHelper = () => {
     display: flex;
     align-items: center;
   }
+
+
+.header-avatar-image {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 }
 </style>

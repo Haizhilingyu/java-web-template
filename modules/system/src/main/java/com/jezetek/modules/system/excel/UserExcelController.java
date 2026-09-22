@@ -130,7 +130,7 @@ public class UserExcelController implements Fetchers {
     @Log(module = "用户管理", action = "导入用户")
     @PreAuthorize("@perm.has('system:user:import')")
     @PostMapping("/import")
-    public ImportResult importUsers() throws IOException {
+    public ImportResult importUsers() throws IOException, jakarta.servlet.ServletException {
         MultipartFile file = currentMultipartFile();
         if (file == null || file.isEmpty()) {
             throw new BusinessException("请选择要导入的文件");
@@ -231,15 +231,11 @@ public class UserExcelController implements Fetchers {
     }
 
     /**
-     * 从当前请求取 multipart 文件：签名不出现 multipart 类型(见类注释)；
-     * 生产经 StandardServletMultipartResolver 解析，MockMvc 的
-     * MockMultipartHttpServletRequest 同样可取
+     * 从当前请求取 multipart 文件：签名不出现 multipart 类型(见类注释)。
+     * Spring 包装(MockMvc)优先，生产回退 Servlet Part(见 PartMultipartFile)
      */
-    private static MultipartFile currentMultipartFile() {
-        HttpServletRequest request = currentRequest();
-        org.springframework.web.multipart.MultipartHttpServletRequest multipartRequest =
-                WebUtils.getNativeRequest(request, org.springframework.web.multipart.MultipartHttpServletRequest.class);
-        return multipartRequest == null ? null : multipartRequest.getFile("file");
+    private static MultipartFile currentMultipartFile() throws IOException, jakarta.servlet.ServletException {
+        return com.jezetek.modules.system.security.PartMultipartFile.fromRequest(currentRequest(), "file");
     }
 
     private static HttpServletRequest currentRequest() {
@@ -256,6 +252,7 @@ public class UserExcelController implements Fetchers {
     private static final Fetcher<User> EXPORT_FETCHER =
             USER_FETCHER
                     .allScalarFields()
+                    .avatar(false)
                     .tenant(false)
                     .dept(DEPT_FETCHER.name())
                     .posts(POST_FETCHER.name())

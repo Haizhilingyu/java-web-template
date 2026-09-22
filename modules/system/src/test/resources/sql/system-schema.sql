@@ -211,6 +211,7 @@ create table sys_user(
     username varchar(50) not null,
     password varchar(100),
     nickname varchar(50),
+    avatar blob,
     enabled boolean not null,
     dept_id bigint,
     tenant varchar(20) not null,

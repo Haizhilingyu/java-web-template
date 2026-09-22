@@ -70,6 +70,13 @@ public interface User extends BaseEntity, TenantAware {
     List<Post> posts();
 
     /**
+     * 头像二进制(PNG/JPG/GIF)，≤2MB；上传/读取走 /api/v1/auth/avatar(工单07)。
+     * 列表/认证等 allScalarFields 抓取处一律 .avatar(false) 排除，避免拖回 BLOB
+     */
+    @Nullable
+    byte[] avatar();
+
+    /**
      * 关联属性 dept 的 id 视图
      */
     @Nullable
