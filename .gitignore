@@ -36,5 +36,5 @@ build/
 /web/node_modules
 /web/static
 
-# ZCode 会话本地文件
+# ZCode 会话本地文件（工程技能放 .agents/skills/，跨工具通用加载，不入此忽略）
 .zcode/

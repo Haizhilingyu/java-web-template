@@ -89,6 +89,10 @@ curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: applicati
 
 ## Agent skills
 
+### Engineering skills
+
+工程技能（Matt 技能集：implement/tdd/code-review/triage/wayfinder 等 30 个）随仓库分发在 `.agents/skills/<name>/SKILL.md`——跨工具通用位置（ZCode、Codex、Cursor 等均扫描该目录），clone 后即可加载，无需用户级安装。
+
 ### Issue tracker
 
 Issues live as local markdown files under `.scratch/<feature>/` in this repo. See `docs/agents/issue-tracker.md`.
