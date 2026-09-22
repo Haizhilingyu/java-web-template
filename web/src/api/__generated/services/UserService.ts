@@ -1,6 +1,11 @@
 import type {Executor} from '../';
 import type {UserDto} from '../model/dto/';
-import type {Page, UserInput, UserSpecification} from '../model/static/';
+import type {
+    AuthModels_ResetPasswordRequest, 
+    Page, 
+    UserInput, 
+    UserSpecification
+} from '../model/static/';
 
 export class UserService {
     
@@ -89,6 +94,19 @@ export class UserService {
     }
     
     /**
+     * 管理员重置密码(工单05)：无需旧密码，按 system:user:resetPwd 授权；
+     * 落库+作废目标用户全部会话走 PasswordManager 共用通道(与改密同语义)
+     */
+    readonly resetPassword: (options: UserServiceOptions['resetPassword']) => Promise<
+        void
+    > = async(options) => {
+        let _uri = '/api/v1/user/';
+        _uri += encodeURIComponent(options.id);
+        _uri += '/password';
+        return (await this.executor({uri: _uri, method: 'PUT', body: options.body})) as Promise<void>;
+    }
+    
+    /**
      * password 属性未提交(更新场景)时保持原值；
      * 提交了明文则落库前 BCrypt 加密。
      * 不能用 input.toEntity()：dto 生成的映射对未提交属性无条件 set null，
@@ -125,5 +143,9 @@ export type UserServiceOptions = {
     }, 
     'deleteUser': {
         readonly id: number
+    }, 
+    'resetPassword': {
+        readonly id: number, 
+        readonly body: AuthModels_ResetPasswordRequest
     }
 }

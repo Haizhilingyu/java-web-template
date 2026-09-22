@@ -1,5 +1,6 @@
 import type {Executor} from '../';
 import type {
+    AuthModels_CaptchaResponse, 
     AuthModels_ChangePasswordRequest, 
     AuthModels_GetInfoResponse, 
     AuthModels_LoginRequest, 
@@ -23,6 +24,28 @@ export class AuthController {
     constructor(private executor: Executor) {}
     
     /**
+     * 读取当前用户头像(工单07)：authenticated 流式返回(JWT 在 header，
+     * 前端 fetch blob → objectURL 展示)；无头像返回 404
+     */
+    readonly avatar: () => Promise<
+        void
+    > = async() => {
+        let _uri = '/api/v1/auth/avatar';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<void>;
+    }
+    
+    /**
+     * 登录验证码(工单01)：开关关只回 enabled=false，前端不渲染验证码框；
+     * 开关开时返回 key 与 Base64 图。免登录访问(SecurityConfig permitAll)
+     */
+    readonly captcha: () => Promise<
+        AuthModels_CaptchaResponse
+    > = async() => {
+        let _uri = '/api/v1/auth/captcha';
+        return (await this.executor({uri: _uri, method: 'GET'})) as Promise<AuthModels_CaptchaResponse>;
+    }
+    
+    /**
      * 修改昵称：每次请求回库加载用户，无需作废会话
      */
     readonly changeNickname: (options: AuthControllerOptions['changeNickname']) => Promise<
@@ -34,7 +57,7 @@ export class AuthController {
     
     /**
      * 修改密码：校验旧密码后更新，成功即作废该用户全部会话(含当前)，
-     * 所有端需重新登录(ADR-0001)
+     * 所有端需重新登录(ADR-0001)；落库+作废走 PasswordManager 共用通道
      */
     readonly changePassword: (options: AuthControllerOptions['changePassword']) => Promise<
         void
@@ -93,9 +116,21 @@ export class AuthController {
         let _uri = '/api/v1/auth/profile';
         return (await this.executor({uri: _uri, method: 'GET'})) as Promise<AuthModels_ProfileResponse>;
     }
+    
+    /**
+     * 上传当前用户头像(工单07)：multipart ≤2MB，扩展名白名单 png/jpg/jpeg/gif。
+     * 内联实现不抽通用文件服务；签名不带 multipart 类型(见类注释)
+     */
+    readonly uploadAvatar: () => Promise<
+        void
+    > = async() => {
+        let _uri = '/api/v1/auth/avatar';
+        return (await this.executor({uri: _uri, method: 'POST'})) as Promise<void>;
+    }
 }
 
 export type AuthControllerOptions = {
+    'captcha': {}, 
     'login': {
         readonly body: AuthModels_LoginRequest
     }, 
@@ -108,5 +143,7 @@ export type AuthControllerOptions = {
     }, 
     'changePassword': {
         readonly body: AuthModels_ChangePasswordRequest
-    }
+    }, 
+    'uploadAvatar': {}, 
+    'avatar': {}
 }

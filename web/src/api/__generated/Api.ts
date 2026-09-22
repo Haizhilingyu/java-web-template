@@ -5,7 +5,9 @@ import {
     DeptService, 
     DictDataService, 
     DictTypeService, 
+    HomeController, 
     JobService, 
+    LogExcelController, 
     LogininforService, 
     MenuService, 
     NoticeService, 
@@ -13,10 +15,17 @@ import {
     OperLogService, 
     PostService, 
     RoleService, 
+    UserExcelController, 
     UserService
 } from './services/';
 
 export class Api {
+    
+    readonly logExcelController: LogExcelController
+    
+    readonly userExcelController: UserExcelController
+    
+    readonly homeController: HomeController
     
     readonly authController: AuthController
     
@@ -47,6 +56,9 @@ export class Api {
     readonly jobService: JobService
     
     constructor(executor: Executor) {
+        this.logExcelController = new LogExcelController(executor);
+        this.userExcelController = new UserExcelController(executor);
+        this.homeController = new HomeController(executor);
         this.authController = new AuthController(executor);
         this.configService = new ConfigService(executor);
         this.deptService = new DeptService(executor);
