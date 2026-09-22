@@ -9,21 +9,6 @@ import { PAGE_NOT_FOUND_ROUTE } from '@/utils/route/constant';
 import { store } from '@/store';
 import { transformObjectToRoute } from '@/utils/route';
 
-/** 取菜单树首个可达页面路径，作为 '/' 的重定向目标 */
-function firstLeafPath(routes: Array<RouteItem>): string {
-  for (const route of routes) {
-    const firstChild = route.children?.[0];
-    if (firstChild?.path) {
-      // 子路由是相对路径，需要拼上父级
-      return firstChild.path.startsWith('/') ? firstChild.path : `${route.path}/${firstChild.path}`;
-    }
-    if (route.path) {
-      return route.path;
-    }
-  }
-  return '/system/user';
-}
-
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
     whiteListRouters: ['/login'],
@@ -31,7 +16,6 @@ export const usePermissionStore = defineStore('permission', {
     removeRoutes: [] as Array<RouteRecordRaw>,
     asyncRoutes: [] as Array<RouteRecordRaw>,
     routesInited: false,
-    firstRoutePath: '/system/user',
   }),
   actions: {
     async initRoutes() {
@@ -42,12 +26,9 @@ export const usePermissionStore = defineStore('permission', {
     },
     async buildAsyncRoutes() {
       // 登录后从后端 /auth/getRouters 拉取按角色过滤的菜单树，
-      // component 是字符串(LAYOUT / pages 下组件路径)，转换成真实路由组件
+      // component 是字符串(LAYOUT / pages 下组件路径)，转换成真实路由组件。
+      // '/' 固定指向首页(router/index.ts)，不再按动态菜单重定向
       const remoteRoutes = await fetchRouters();
-      this.firstRoutePath = firstLeafPath(remoteRoutes);
-      // 同名路由 addRoute 会整体替换，刷新 '/' 的重定向目标
-      router.addRoute({ path: '/', name: 'root', redirect: this.firstRoutePath });
-
       this.asyncRoutes = (transformObjectToRoute(remoteRoutes) as unknown as Array<RouteRecordRaw>)
         // 404 已在 router/index.ts 静态注册为组件路由，滤掉模板 transform 返回的 redirect 版
         .filter((route) => route.name !== PAGE_NOT_FOUND_ROUTE.name);
@@ -65,7 +46,6 @@ export const usePermissionStore = defineStore('permission', {
       });
       this.asyncRoutes = [];
       this.routesInited = false;
-      router.addRoute({ path: '/', name: 'root', redirect: this.firstRoutePath });
     },
   },
 });

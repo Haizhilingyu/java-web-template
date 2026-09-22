@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * 登录图形验证码(工单01)：
  * <ul>
- *   <li>开关存 {@code sys_config} 的 {@code captchaEnabled}(种子默认 false)，
+ *   <li>开关存 {@code sys_config} 的 {@code captcha.enabled}(种子默认 false)，
  *       每次读取直查库，参数页改后即时生效不发版</li>
  *   <li>答案存进程内一次性 Caffeine(key=uuid，TTL 2 分钟)，校验即删防重放</li>
  * </ul>
@@ -27,7 +27,7 @@ import java.util.UUID;
 public class CaptchaService {
 
     /** 开关所在参数键：sys_config.business_key 全局唯一 */
-    public static final String CONFIG_KEY = "captchaEnabled";
+    public static final String CONFIG_KEY = "captcha.enabled";
 
     private final ConfigRepository configRepository;
 

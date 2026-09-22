@@ -61,5 +61,5 @@ insert into sys_user_role_mapping(user_id, role_id) values
 
 -- 系统参数：登录验证码开关(默认关)；登录链路每次直读库，参数页改后即时生效
 insert into sys_config(id, config_key, config_name, config_value, remark, tenant, created_time, modified_time) values
-    (1, 'captchaEnabled', '是否开启登录验证码', 'false', '开启后登录页渲染图形验证码', 'default', current_timestamp(), current_timestamp())
+    (1, 'captcha.enabled', '是否开启登录验证码', 'false', '开启后登录页渲染图形验证码', 'default', current_timestamp(), current_timestamp())
 ;
