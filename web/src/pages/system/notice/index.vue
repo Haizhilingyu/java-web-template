@@ -45,7 +45,7 @@
       v-model:visible="formVisible"
       :header="form.id ? '编辑公告' : '新增公告'"
       :confirm-btn="{ content: '保存', loading: saving }"
-      width="560px"
+      width="700px"
       @confirm="save"
       @closed="formInstance?.reset()"
     >
@@ -59,7 +59,8 @@
           </t-select>
         </t-form-item>
         <t-form-item label="内容" name="content">
-          <t-textarea v-model="form.content" :autosize="{ minRows: 5 }" placeholder="纯文本内容" />
+          <!-- 富文本(工单08)：wangEditor 编辑，保存 HTML -->
+          <rich-editor v-model="form.content" height="280px" class="notice-editor" />
         </t-form-item>
         <t-form-item label="是否启用" name="enabled">
           <t-switch v-model="form.enabled" />
@@ -67,12 +68,13 @@
       </t-form>
     </t-dialog>
 
-    <t-dialog v-model:visible="viewVisible" :header="viewTarget?.noticeTitle" width="560px" :footer="false">
+    <t-dialog v-model:visible="viewVisible" :header="viewTarget?.noticeTitle" width="700px" :footer="false">
       <div class="view-body">
         <p>
           <t-tag variant="outline">{{ noticeTypeDict.label(viewTarget?.noticeType) }}</t-tag>
         </p>
-        <p class="view-content">{{ viewTarget?.content || '（无内容）' }}</p>
+        <!-- 查看端经 DOMPurify 清洗后渲染(工单08) -->
+        <rich-viewer :content="viewTarget?.content || ''" />
       </div>
     </t-dialog>
 
@@ -93,6 +95,8 @@
   import type { NoticeDto } from '@/api/__generated/model/dto';
   import type { NoticeInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
+  import RichEditor from '@/components/rich-text/rich-editor.vue';
+  import RichViewer from '@/components/rich-text/rich-viewer.vue';
   import { useDict } from '@/hooks/useDict';
 
   type NoticeRow = NoticeDto['NoticeService/DEFAULT_FETCHER'];
@@ -259,6 +263,10 @@
     &.select {
       width: 110px;
     }
+  }
+
+  .notice-editor {
+    width: 100%;
   }
 
   .view-content {
