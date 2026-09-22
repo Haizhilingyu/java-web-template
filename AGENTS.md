@@ -85,6 +85,8 @@ curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: applicati
 - 动态菜单 title 是纯字符串，`MenuContent`/`Breadcrumb` 已做兼容；新增消费 `meta.title` 的组件要注意
 - IDEA 开着时其 Maven 自动导入可能清空/重建构建目录，别与其并发构建冲突
 
+- **jimmer-apt 对解析错误零容错且静默失败**：实体/控制器里任何一个符号解析错误（如不存在的 Fetcher 方法、未导入的类）或 @FetchBy 注解位置使用全限定类名（如 Page<@FetchBy('X') com.jezetek.model.User>），会让 jimmer-apt 整体不出码，全模块报"找不到符号 Fetchers/xxxTable/service.dto"的连锁假错。排错先看自己刚改的文件有没有 resolve 错误；@FetchBy 处必须用 import 后的简单类名
+
 ## Agent skills
 
 ### Issue tracker
