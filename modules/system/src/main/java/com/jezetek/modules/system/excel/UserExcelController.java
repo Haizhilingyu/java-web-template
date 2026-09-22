@@ -48,7 +48,7 @@ public class UserExcelController implements Fetchers {
 
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,50}$");
 
-    /** 导入行数上限：防御性限流，避免超大文件拖垮内存 */
+    /** 导入行数上限：读取后校验拒绝(内存兜底另有 multipart 10MB 上限) */
     private static final int MAX_IMPORT_ROWS = 1000;
 
     /** 导入的默认初始密码(与种子冒烟账号一致) */

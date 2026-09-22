@@ -102,8 +102,9 @@
   import { onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
 
+  import { api } from '@/api/jimmer';
   import RichViewer from '@/components/rich-text/rich-viewer.vue';
-  import { fetchHomeNotice, fetchHomeNotices, fetchHomeSummary, type HomeNoticeBrief, type HomeNoticeDetail, type HomeSummary } from '@/api/extra';
+  import type { HomeController_NoticeBrief, HomeController_NoticeDetail, HomeController_HomeSummary } from '@/api/__generated/model/static';
   import { useDict } from '@/hooks/useDict';
   import { useUserStore } from '@/store';
 
@@ -111,10 +112,10 @@
   const router = useRouter();
   const noticeTypeDict = useDict('sys_notice_type');
 
-  const summary = ref<HomeSummary>();
-  const notices = ref<Array<HomeNoticeBrief>>([]);
+  const summary = ref<HomeController_HomeSummary>();
+  const notices = ref<ReadonlyArray<HomeController_NoticeBrief>>([]);
   const noticeVisible = ref(false);
-  const noticeDetail = ref<HomeNoticeDetail>();
+  const noticeDetail = ref<HomeController_NoticeDetail>();
 
   const quickEntries = [
     { path: '/system/user', title: '用户管理', icon: 'user' },
@@ -124,7 +125,7 @@
 
   async function openNotice(id: number) {
     try {
-      noticeDetail.value = await fetchHomeNotice(id);
+      noticeDetail.value = await api.homeController.notice({ id });
       noticeVisible.value = true;
     } catch (error) {
       MessagePlugin.error((error as Error).message);
@@ -133,7 +134,10 @@
 
   onMounted(async () => {
     try {
-      const [summaryResult, noticeResult] = await Promise.all([fetchHomeSummary(), fetchHomeNotices()]);
+      const [summaryResult, noticeResult] = await Promise.all([
+        api.homeController.summary(),
+        api.homeController.notices(),
+      ]);
       summary.value = summaryResult;
       notices.value = noticeResult;
     } catch (error) {

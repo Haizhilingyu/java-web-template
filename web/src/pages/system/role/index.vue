@@ -149,10 +149,9 @@
   import type { FormInstanceFunctions, FormRules, PageInfo, TableProps } from 'tdesign-vue-next';
   import { onMounted, reactive, ref } from 'vue';
 
-  import type { DeptDto, MenuDto, RoleDto } from '@/api/__generated/model/dto';
+  import type { DeptDto, MenuDto, RoleDto, UserDto } from '@/api/__generated/model/dto';
   import type { RoleInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
-  import { assignRoleUsers, fetchRoleUsers, unassignRoleUsers } from '@/api/extra';
 
   type RoleRow = RoleDto['RoleService/DEFAULT_FETCHER'];
   type MenuNode = MenuDto['MenuService/TREE_FETCHER'];
@@ -383,7 +382,7 @@
   // ------- 分配用户(工单06) -------
   const assignVisible = ref(false);
   const assignTarget = ref<RoleRow>();
-  const boundUsers = ref<Array<import('@/api/extra').RoleUserRow>>([]);
+  const boundUsers = ref<Array<UserDto['RoleService/ROLE_USER_FETCHER']>>([]);
   const boundSelection = ref<Array<string | number>>([]);
   const boundLoading = ref(false);
   const boundQuery = reactive({ keyword: '' });
@@ -415,12 +414,12 @@
     }
     boundLoading.value = true;
     try {
-      const page = await fetchRoleUsers(
-        assignTarget.value.id,
-        boundPagination.current - 1,
-        boundPagination.pageSize,
-        boundQuery.keyword || undefined,
-      );
+      const page = await api.roleService.findRoleUsers({
+        id: assignTarget.value.id,
+        pageIndex: boundPagination.current - 1,
+        pageSize: boundPagination.pageSize,
+        keyword: boundQuery.keyword || undefined,
+      });
       boundUsers.value = [...page.content];
       boundPagination.total = page.totalElements;
     } catch (error) {
@@ -479,7 +478,10 @@
       return;
     }
     try {
-      await assignRoleUsers(assignTarget.value.id, pickSelection.value);
+      await api.roleService.assignUsers({
+        id: assignTarget.value.id,
+        body: { userIds: pickSelection.value },
+      });
       MessagePlugin.success('授权成功，用户权限即时生效');
       pickVisible.value = false;
       searchBound();
@@ -493,10 +495,10 @@
       return;
     }
     try {
-      await unassignRoleUsers(
-        assignTarget.value.id,
-        boundSelection.value.map((key) => Number(key)),
-      );
+      await api.roleService.unassignUsers({
+        id: assignTarget.value.id,
+        body: { userIds: boundSelection.value.map((key) => Number(key)) },
+      });
       MessagePlugin.success('已取消授权');
       boundSelection.value = [];
       loadBoundUsers();

@@ -188,7 +188,6 @@
   import type { UserInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
   import { downloadFile, type ImportResult, uploadForJson } from '@/api/download';
-  import { resetUserPassword } from '@/api/extra';
 
   type UserRow = UserDto['UserService/DEFAULT_FETCHER'];
   type DeptNode = DeptDto['DeptService/TREE_FETCHER'];
@@ -433,7 +432,10 @@
     }
     resetting.value = true;
     try {
-      await resetUserPassword(resetTarget.value.id, resetForm.newPassword);
+      await api.userService.resetPassword({
+        id: resetTarget.value.id,
+        body: { newPassword: resetForm.newPassword },
+      });
       MessagePlugin.success('密码已重置，该用户的全部会话已作废');
       resetVisible.value = false;
     } catch (error) {

@@ -16,9 +16,8 @@ const props = withDefaults(
 
 const sanitized = computed(() =>
   DOMPurify.sanitize(props.content ?? '', {
-    // 禁止任何内嵌脚本与事件属性
+    // 默认已剥离全部事件属性与 javascript: URL，这里再显式禁危险标签
     FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
-    FORBID_ATTR: ['onerror', 'onclick', 'onload'],
   }),
 );
 </script>
