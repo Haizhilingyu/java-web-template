@@ -5,6 +5,7 @@ import com.jezetek.modules.system.model.User;
 import com.jezetek.modules.system.model.UserTable;
 import org.babyfish.jimmer.Specification;
 import org.babyfish.jimmer.sql.ast.Expression;
+import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.spring.repo.support.AbstractJavaRepository;
 import org.babyfish.jimmer.spring.repository.support.SpringPageFactory;
 import org.babyfish.jimmer.sql.JSqlClient;
@@ -91,6 +92,30 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
     }
 
     /**
+     * 按角色 id 分页查已绑用户(工单06 分配用户)；keyword 对用户名/昵称模糊过滤
+     */
+    public Page<@NotNull User> findByRoleId(
+            Pageable pageable,
+            long roleId,
+            @Nullable String keyword,
+            @Nullable Fetcher<User> fetcher
+    ) {
+        return sql
+                .createQuery(table)
+                .where(table.roles(role -> role.id().eq(roleId)))
+                .where(keyword == null || keyword.isBlank() ? null : Predicate.or(
+                        table.username().like("%" + keyword + "%"),
+                        table.nickname().like("%" + keyword + "%")))
+                .orderBy(PageOrders.translate(pageable.getSort(), UserRepository::sortable))
+                .select(table.fetch(fetcher))
+                .fetchPage(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        SpringPageFactory.getInstance()
+                );
+    }
+
+    /**
      * 登录场景：按用户名加载用户，可用 fetcher 一并抓取角色
      */
     public Optional<User> findByUsername(String username, @Nullable Fetcher<User> fetcher) {
@@ -99,6 +124,19 @@ public class UserRepository extends AbstractJavaRepository<User, Long> {
                 .where(table.username().eq(username))
                 .select(table.fetch(fetcher))
                 .fetchOptional();
+    }
+
+    /**
+     * 用户总数(首页统计，工单09)
+     */
+    public long countAll() {
+        return sql
+                .createQuery(table)
+                .select(table.id().count())
+                .execute()
+                .stream()
+                .findFirst()
+                .orElse(0L);
     }
 
     /**

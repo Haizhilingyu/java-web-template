@@ -58,6 +58,31 @@ public class RoleRepository extends AbstractJavaRepository<Role, Long> {
                 .fetchOptional();
     }
 
+    /**
+     * 角色总数(首页统计，工单09)
+     */
+    public long countAll() {
+        return sql
+                .createQuery(table)
+                .select(table.id().count())
+                .execute()
+                .stream()
+                .findFirst()
+                .orElse(0L);
+    }
+
+    /**
+     * 角色是否存在：分配/取消分配用户前校验(工单06)
+     */
+    public boolean existsById(long id) {
+        return !sql
+                .createQuery(table)
+                .where(table.id().eq(id))
+                .select(table.id())
+                .execute()
+                .isEmpty();
+    }
+
     /** sortCode 属性白名单：白名单外回退 id(见 PageOrders) */
     private static Expression<?> sortable(String property) {
         return switch (property) {

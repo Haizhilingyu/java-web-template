@@ -29,6 +29,7 @@
         <template #op="{ row }">
           <t-space>
             <t-link theme="primary" v-permission="'system:role:edit'" @click="openForm(row)"> 编辑 </t-link>
+            <t-link theme="primary" v-permission="'system:role:edit'" @click="openAssign(row)"> 分配用户 </t-link>
             <t-link theme="danger" v-permission="'system:role:delete'" @click="confirmDelete(row)"> 删除 </t-link>
           </t-space>
         </template>
@@ -95,6 +96,51 @@
       :body="`确认删除角色「${deleteTarget?.name}」？`"
       @confirm="doDelete"
     />
+
+    <!-- 分配用户抽屉(工单06)：上半已绑用户分页列表，支持批量授权/批量取消授权 -->
+    <t-drawer v-model:visible="assignVisible" :header="`分配用户：${assignTarget?.name ?? ''}`" size="720px" :footer="false">
+      <t-space direction="vertical" style="width: 100%">
+        <t-row justify="space-between">
+          <t-space>
+            <t-input v-model="boundQuery.keyword" placeholder="用户名/昵称" clearable style="width: 180px" @enter="searchBound" />
+            <t-button theme="primary" variant="base" @click="searchBound"> 查询 </t-button>
+          </t-space>
+          <t-space>
+            <t-button theme="primary" @click="openPickUsers"> 批量授权 </t-button>
+            <t-button theme="danger" variant="outline" :disabled="!boundSelection.length" @click="doUnassign">
+              批量取消授权
+            </t-button>
+          </t-space>
+        </t-row>
+        <t-table
+          row-key="id"
+          :data="boundUsers"
+          :columns="boundColumns"
+          :loading="boundLoading"
+          :pagination="boundPagination"
+          :selected-row-keys="boundSelection"
+          @page-change="onBoundPageChange"
+          @select-change="(keys: Array<string | number>) => (boundSelection = keys)"
+        >
+          <template #dept="{ row }">{{ row.dept?.name ?? '-' }}</template>
+        </t-table>
+      </t-space>
+    </t-drawer>
+
+    <!-- 挑选用户弹窗：勾选后加入该角色 -->
+    <t-dialog v-model:visible="pickVisible" header="选择要授权的用户" width="480px" @confirm="doAssign">
+      <t-select
+        v-model="pickSelection"
+        multiple
+        clearable
+        filterable
+        :loading="pickLoading"
+        placeholder="输入用户名/昵称搜索"
+        style="width: 100%"
+      >
+        <t-option v-for="user in pickableUsers" :key="user.id" :label="`${user.username}（${user.nickname ?? '-'}）`" :value="user.id" />
+      </t-select>
+    </t-dialog>
   </div>
 </template>
 
@@ -106,6 +152,7 @@
   import type { DeptDto, MenuDto, RoleDto } from '@/api/__generated/model/dto';
   import type { RoleInput } from '@/api/__generated/model/static';
   import { api } from '@/api/jimmer';
+  import { assignRoleUsers, fetchRoleUsers, unassignRoleUsers } from '@/api/extra';
 
   type RoleRow = RoleDto['RoleService/DEFAULT_FETCHER'];
   type MenuNode = MenuDto['MenuService/TREE_FETCHER'];
@@ -130,7 +177,7 @@
     { colKey: 'name', title: '名称' },
     { colKey: 'description', title: '描述' },
     { colKey: 'menus', title: '可访问菜单' },
-    { colKey: 'op', title: '操作', width: 120 },
+    { colKey: 'op', title: '操作', width: 170 },
   ];
 
   const query = reactive({
@@ -328,6 +375,131 @@
       MessagePlugin.success('删除成功');
       deleteVisible.value = false;
       load();
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    }
+  }
+
+  // ------- 分配用户(工单06) -------
+  const assignVisible = ref(false);
+  const assignTarget = ref<RoleRow>();
+  const boundUsers = ref<Array<import('@/api/extra').RoleUserRow>>([]);
+  const boundSelection = ref<Array<string | number>>([]);
+  const boundLoading = ref(false);
+  const boundQuery = reactive({ keyword: '' });
+  const boundPagination = reactive({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+    showJumper: true,
+  });
+  const boundColumns: TableProps['columns'] = [
+    { colKey: 'row-select', type: 'multiple', width: 46 },
+    { colKey: 'username', title: '用户名', width: 120 },
+    { colKey: 'nickname', title: '昵称', width: 110 },
+    { colKey: 'dept', title: '部门', cell: 'dept' },
+    { colKey: 'enabled', title: '状态', width: 80 },
+  ];
+
+  function openAssign(row: RoleRow) {
+    assignTarget.value = row;
+    boundQuery.keyword = '';
+    boundSelection.value = [];
+    assignVisible.value = true;
+    loadBoundUsers();
+  }
+
+  async function loadBoundUsers() {
+    if (!assignTarget.value) {
+      return;
+    }
+    boundLoading.value = true;
+    try {
+      const page = await fetchRoleUsers(
+        assignTarget.value.id,
+        boundPagination.current - 1,
+        boundPagination.pageSize,
+        boundQuery.keyword || undefined,
+      );
+      boundUsers.value = [...page.content];
+      boundPagination.total = page.totalElements;
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      boundLoading.value = false;
+    }
+  }
+
+  function searchBound() {
+    boundPagination.current = 1;
+    loadBoundUsers();
+  }
+
+  function onBoundPageChange(pageInfo: PageInfo) {
+    boundPagination.current = pageInfo.current;
+    boundPagination.pageSize = pageInfo.pageSize;
+    boundSelection.value = [];
+    loadBoundUsers();
+  }
+
+  // 批量授权：弹窗里多选用户
+  const pickVisible = ref(false);
+  const pickLoading = ref(false);
+  const pickSelection = ref<Array<number>>([]);
+  const pickableUsers = ref<Array<{ id: number; username: string; nickname?: string }>>([]);
+
+  async function openPickUsers() {
+    if (!assignTarget.value) {
+      return;
+    }
+    pickSelection.value = [];
+    pickVisible.value = true;
+    pickLoading.value = true;
+    try {
+      // 候选为全部启用用户(后端授权幂等，重复勾选已绑用户无副作用)
+      const page = await api.userService.findUsersBySuperQBE({
+        pageIndex: 0,
+        pageSize: 500,
+        sortCode: 'username asc',
+        specification: {},
+      });
+      pickableUsers.value = page.content
+        .filter((user) => user.enabled)
+        .map((user) => ({ id: user.id, username: user.username, nickname: user.nickname ?? undefined }));
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    } finally {
+      pickLoading.value = false;
+    }
+  }
+
+  async function doAssign() {
+    if (!assignTarget.value || !pickSelection.value.length) {
+      pickVisible.value = false;
+      return;
+    }
+    try {
+      await assignRoleUsers(assignTarget.value.id, pickSelection.value);
+      MessagePlugin.success('授权成功，用户权限即时生效');
+      pickVisible.value = false;
+      searchBound();
+    } catch (error) {
+      MessagePlugin.error((error as Error).message);
+    }
+  }
+
+  async function doUnassign() {
+    if (!assignTarget.value || !boundSelection.value.length) {
+      return;
+    }
+    try {
+      await unassignRoleUsers(
+        assignTarget.value.id,
+        boundSelection.value.map((key) => Number(key)),
+      );
+      MessagePlugin.success('已取消授权');
+      boundSelection.value = [];
+      loadBoundUsers();
     } catch (error) {
       MessagePlugin.error((error as Error).message);
     }
