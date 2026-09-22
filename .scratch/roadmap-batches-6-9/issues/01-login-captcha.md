@@ -19,3 +19,5 @@
 - 前端：auth.ts 加 `fetchCaptcha()`；Login.vue mounted 拉取，enabled 时渲染验证码框+点击换图，登录失败自动刷新（答案已消费）。
 - 测试：CaptchaTest 4 用例（关：接口只回 enabled+传统登录不受影响；开：图形下发+错码拒绝且记日志+正确码登录成功；一次性重放失败；开启时缺字段拒绝）。system 94 全绿；vue-tsc 零错误；浏览器冒烟与工单02 合并执行（见 02 Comments）。
 - 备注：开关读库在登录链路无租户头场景下不带租户过滤（TenantFilter 既有行为），configKey 全局唯一，行为确定。
+
+- 追记(2026-09-22 冒烟)：参数键原定 captchaEnabled 违反 ConfigInput 的键名校验规则（[a-z][a-z0-9.]* 全小写），参数页改值必 400。已改名 **captcha.enabled**（种子/CaptchaService.CONFIG_KEY/AGENTS.md 同步），UI 编辑即时生效已验证。
