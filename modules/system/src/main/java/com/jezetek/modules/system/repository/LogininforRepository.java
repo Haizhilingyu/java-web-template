@@ -69,6 +69,22 @@ public class LogininforRepository extends AbstractJavaRepository<Logininfor, Lon
                 .execute();
     }
 
+
+    /**
+     * 今日登录成功次数(首页统计，工单09)：message=登录成功 且 createdTime 在今天零点后
+     */
+    public long countTodaySuccess() {
+        return sql
+                .createQuery(table)
+                .where(table.message().eq("登录成功"))
+                .where(table.createdTime().ge(java.time.LocalDate.now().atStartOfDay()))
+                .select(table.id().count())
+                .execute()
+                .stream()
+                .findFirst()
+                .orElse(0L);
+    }
+
     /**
      * 清空全部登录日志
      *

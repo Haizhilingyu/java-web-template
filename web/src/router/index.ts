@@ -19,10 +19,10 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/login/index.vue'),
   },
   {
-    // 登录后由 permission store 按动态菜单重设重定向目标(同名路由整体替换)
+    // 首页轻量版(工单09)：'/' 渲染欢迎页(统计卡+公告卡)，不再重定向到首个菜单
     path: '/',
     name: 'root',
-    redirect: '/system/user',
+    redirect: '/home/index',
   },
   {
     // 404 兜底直接渲染页面而非 redirect：/result/404 未注册路由，redirect 会无限重定向

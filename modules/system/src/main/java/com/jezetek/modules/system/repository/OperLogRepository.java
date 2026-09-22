@@ -70,6 +70,20 @@ public class OperLogRepository extends AbstractJavaRepository<OperLog, Long> {
                 .execute();
     }
 
+
+    /**
+     * 操作日志总数(首页统计，工单09)
+     */
+    public long countAll() {
+        return sql
+                .createQuery(table)
+                .select(table.id().count())
+                .execute()
+                .stream()
+                .findFirst()
+                .orElse(0L);
+    }
+
     /**
      * 清空全部操作日志
      */

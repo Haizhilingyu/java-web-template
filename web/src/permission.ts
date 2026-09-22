@@ -51,7 +51,7 @@ router.beforeEach(async (to, from, next) => {
         // 只匹配到目录层(如无权访问的 /system/role)会渲染空白，重定向到首个可达页面
         next();
       } else {
-        next(permissionStore.firstRoutePath);
+        next('/home/index');
       }
     } catch (error) {
       MessagePlugin.error((error as Error).message);
